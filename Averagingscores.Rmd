@@ -1,0 +1,154 @@
+---
+title: "Sensitivitty_rew_startup - correlation and data cleaning"
+author: "Liv Tollånes"
+date: "2023-02-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+pacman::p_load("tidyverse", "ggpubr", "psych", "Hmisc", "corrplot", "rstatix")
+
+```
+
+
+## Task Nr.1 - Avergaing Scores across POS/NEG CBM training performance
+- Average participants' performance across the 2 EEfRt tasks to create three averaged scores: one for low, one for medium, and one for high probability trials). 
+- Then correlate with baseline measures.
+
+### Data loading and format alterations
+```{r}
+#Loading in data
+vars_CBM <- read.csv("./data/CBM_variables.csv")
+df_CBM <- read.csv("./data/CBM_data.csv")
+
+
+#Creating subset for just for better overview
+#EEfRT_sub <- df_CBM %>% select(c((1:7), contains("EEfRT")))
+
+length(unique(df_CBM $participant_id)) #81 unique subs
+
+# Select only IDs with exclude values 0. 2 rows were dropped - so now there are 79 participants in the df
+df_CBM  <- subset(df_CBM ,exclude == 0 )
+
+#Replace weird column values with NA
+df_CBM [df_CBM  == "#NULL!"] <- NA
+
+as_tibble(df_CBM )
+
+# Make all EEfRT columns numeric
+# MAKE THIS CODE LESS MANUAL AT SOME POINT
+# Pos high prob
+df_CBM $POS_EEfRT_prop_hard_choice_highprob <- as.numeric(df_CBM $POS_EEfRT_prop_hard_choice_highprob, na.rm = T)
+is.numeric(df_CBM $POS_EEfRT_prop_hard_choice_highprob)
+
+#Pos med prob
+df_CBM $POS_EEfRT_prop_hard_choice_medprob <- as.numeric(df_CBM $POS_EEfRT_prop_hard_choice_medprob, na.rm = T)
+is.numeric(df_CBM $POS_EEfRT_prop_hard_choice_medprob)
+
+#POS low prob
+df_CBM $POS_EEfRT_prop_hard_choice_lowprob <- as.numeric(df_CBM $POS_EEfRT_prop_hard_choice_lowprob, na.rm = T)
+is.numeric(df_CBM $POS_EEfRT_prop_hard_choice_lowprob)
+
+#NEG high prob
+df_CBM $NEG_EEfRT_prop_hard_choice_highprob <- as.numeric(df_CBM $NEG_EEfRT_prop_hard_choice_highprob, na.rm = T)
+is.numeric(df_CBM $NEG_EEfRT_prop_hard_choice_highprob)
+
+#NEG med prob
+df_CBM $NEG_EEfRT_prop_hard_choice_medprob <- as.numeric(df_CBM $NEG_EEfRT_prop_hard_choice_medprob, na.rm = T)
+is.numeric(df_CBM $NEG_EEfRT_prop_hard_choice_medprob)
+
+#NEG low prob
+df_CBM $NEG_EEfRT_prop_hard_choice_lowprob <- as.numeric(df_CBM $NEG_EEfRT_prop_hard_choice_lowprob, na.rm = T)
+is.numeric(df_CBM $NEG_EEfRT_prop_hard_choice_lowprob)
+
+#Create Average column (average of positive and negative EEfRT scores averaged together into one EEfRT total score)
+df_CBM$EEfRT_averaged_lowp <- rowMeans(df_CBM [ ,c("POS_EEfRT_prop_hard_choice_lowprob", "NEG_EEfRT_prop_hard_choice_lowprob")])
+df_CBM$EEfRT_averaged_medp <- rowMeans(df_CBM [ ,c("POS_EEfRT_prop_hard_choice_medprob", "NEG_EEfRT_prop_hard_choice_medprob")])
+df_CBM$EEfRT_averaged_highp <- rowMeans(df_CBM [ ,c("POS_EEfRT_prop_hard_choice_highprob", "NEG_EEfRT_prop_hard_choice_highprob")])
+
+#Saving the data in a finished preprocessing file - to not repeat the above code every time
+write.csv(df_CBM, "./data/preprocessed.csv", row.names=FALSE)
+
+```
+
+
+```{r}
+# Loading in preprocessed data - when running code again
+# df <- read.csv("./data/preprocessed.csv")
+```
+
+### Correlate with baseline measures 
+- Are there any relationships between the baseline measures and the averaged EEfRT scores?
+- Test strength of association between variables
+
+```{r}
+# Subset all columns containing EEfRT and the baseline measures - to make the task of correlations easier to overview
+# Baseline measures include all MASQ-, TEPS, and BIS/BAs-columns
+sub <- df_CBM %>% select(c((1:7),EEfRT_averaged_lowp, EEfRT_averaged_medp, EEfRT_averaged_highp, TEPS_ANT, TEPS_CON, MASQ_GD, MASQ_AD, MASQ_AA, BAS_Drive, BAS_FS, BAS_RR, BIS))
+
+# #Removing non-useful columns in order to make the corr matrix work easily
+sub$exclude <- NULL 
+sub$participant_id <- NULL
+# sub$Nationality <- NULL
+# sub$Gender <- NULL
+
+#Testing the class of all variables at once
+sapply(sub, class)
+
+#Change all baseline measures to numeric
+sub <- sub %>% mutate_at(c(6:17), as.numeric) #Remember to update the number specified according to the number of columns dropped
+
+# na.omit(sub)  shuld NAs be omitted for the correlation calculation?
+
+
+# Asummption of normally distributed data for pearson's correlation test
+shapiro.test(sub$EEfRT_averaged_lowp) # p<.05 - not normal
+shapiro.test(sub$EEfRT_averaged_highp) # p <.05 not normal
+shapiro.test(sub$EEfRT_averaged_medp) #p>.05 - normal
+
+
+hist(sub$EEfRT_averaged_lowp, col = 'coral2')
+hist(sub$EEfRT_averaged_highp, col = 'steelblue')
+hist(sub$EEfRT_averaged_medp)
+
+```
+
+```{r}
+#### Correlation Work - IF TIME: create the correlation plot with their corresponding p-values
+
+#creating a subset for correlation work
+corsub <- sub %>% select(c(, (6:17)))
+corsub <- na.omit(corsub)
+sapply(corsub, class)
+corsub_matrix <- as.matrix(corsub)
+
+
+#create Spearman correlation matrix
+corr_mat <-  cor(corsub, method="spearman")
+
+#Create a p-value matrix for including in the plot
+#cor_matrix <- cor_pmat(sub, method = "spearman")
+
+#Correlation matrix - using nonparametric Spearman correlation test due to non-normal variables, and not a complete set of continuous variables
+#Obtains p-values as well 
+rcorr(corsub_matrix, type = c("spearman"))
+
+#plotting the correlation matrix
+corrplot(corr_mat, method = c("number"), type = "upper") #With specific numbers
+corrplot(corr_mat) #With circles to represent correlations instead
+
+```
+
+Output of the correlation analysis
+- For the high and medium probability categories, no relationship between the averaged EEfRT scores and baseline measures were found (p>.05)
+- For the low probabilit category, a small positive correlation (0.29) was found between the averaged EEfRT score and the MASQ.AA measure (p<0.05). Otherwise, no significant correlations were found for this probability category and the rest of the measure
+
+
+
+
+
+
+
+

@@ -1,0 +1,27 @@
+---
+title: "Models"
+author: "Liv Tollånes"
+date: "2023-02-09"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+## 2. Multilevel modelling of reward anticipation and self reports of pleasure and experience of reward
+Q: Does lab-measured reward anticipation (averaged EEfRT scores) predict self-reported (i) "anticipated reward pleasure" (ii) "experienced reward" in the real world (ESM)? 
+
+
+	- Use the averaged EEfRT scores created in task 1. (Scores from the 2 days(pos and neg) merged together, but with 3 levels, low, med, high probability)
+	
+	- Use multilevel modelling, with 3 levels of nested data (questionnaires, nested within days, within participants)
+	
+	- The analysis would be very close to the paper: https://psyarxiv.com/fnhd9/, but with EEfRT performance as the participant-level predictors (low, med, high) instead of the ISI, RPA scores, and ERQ scores. The EEfRT are obviously not day-level predictors, but more like our covariates baseline, ISI  - instead of baseline participant-level ISI scores, RPA scores, and ERQ scores). "Participant" and "Days within participant" are random intercepts.
+
+
+```{r}
+#Loading pa
+```
+
