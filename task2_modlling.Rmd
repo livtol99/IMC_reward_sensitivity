@@ -24,7 +24,7 @@ Q: Does lab-measured reward anticipation (averaged EEfRT scores) predict self-re
 ```{r}
 #Loading packages 
 
-pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "nlme", "lme4", "lmerTest", "JWileymisc","multilevelTools")
+pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "nlme", "lme4", "lmerTest", "JWileymisc","multilevelTools", "texreg")
 
 
 ```
@@ -135,6 +135,10 @@ CBM_sub <- CBM_sub %>% filter(!ID %in% "P022")
 length(unique(ESM$Actual_ID))
 length(unique(CBM_sub$ID)) #The two dfs are now equal 
 
+
+
+
+##### Instead of all of the above, I guess an alternative option was to just merge the dfs, and write na.action "na-omit" in the model .....
 ```
 
 
@@ -160,7 +164,35 @@ ESM_merged <- ESM_merged  %>% relocate(Nationality, .after=StartDate)
 
 ```
 
+## Actual modelling
 
+Variable types:
+- Outcome/dependent variables (ant/con. pleasure) are ordinal (measured on 7 pt. Likert scale)
+- Predictors: EEfRT averages are ratios. Between 0 and 1
+
+
+I should consider centering the outcome variables (ant/con pleasure - see link: https://philippmasur.de/2018/05/23/how-to-center-in-multilevel-models/)
+
+Christine writes that the multilevel analysis should contain:
+- checking residuals
+- mean-centring some variables
+- running models (with and without outliers)
+- generating some plots at the end
+
+```{r}
+#Inspecting range of EEfRT ratios (predictors)
+min(ESM_merged$EEfRT_averaged_lowp) #0
+max(ESM_merged$EEfRT_averaged_lowp) #0.81
+
+min(ESM_merged$EEfRT_averaged_medp) #0
+max(ESM_merged$EEfRT_averaged_medp) #0.975
+
+min(ESM_merged$EEfRT_averaged_highp) #0.03
+max(ESM_merged$EEfRT_averaged_highp) #0.1
+
+
+#Consider centering the outcome variable
+```
 
 
 
