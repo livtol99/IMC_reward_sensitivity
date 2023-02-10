@@ -1,0 +1,256 @@
+StartDate,Date of participation,Meta-data
+exclude,0 = include; 1 = exclude,Meta-data
+participant_id,raw ID,Meta-data
+ID,recoded ID,Meta-data
+Gender,0=male; 1=female,Demographics
+Age,years,Demographics
+Nationality,text,Demographics
+Education,0=high school; 1=college grad; 2=postgrad; 3=PhD or higher,Demographics
+Maritalstatus,0=single; 1=married,Demographics
+Ethnicity,0=White british; 1=White other; 2=Black/Black british; 3=Asian/Asian british; 4=Gypsy/traveller/Irish traveller; 5=mixed/multiple ethnic groups; 6=other),Demographics
+HispanicLatino,0=not hispanic/latino; 1=hispanic/latino,Demographics
+STAI_Calm,State Trait Anxiety Inventory,Raw data
+STAI_Secure,State Trait Anxiety Inventory,Raw data
+STAI_Tense,State Trait Anxiety Inventory,Raw data
+STAI_Regretful,State Trait Anxiety Inventory,Raw data
+STAI_AtEase,State Trait Anxiety Inventory,Raw data
+STAI_Upset,State Trait Anxiety Inventory,Raw data
+STAI_FutureWorry,State Trait Anxiety Inventory,Raw data
+STAI_Rested,State Trait Anxiety Inventory,Raw data
+STAI_Anxious,State Trait Anxiety Inventory,Raw data
+STAI_Comfortable,State Trait Anxiety Inventory,Raw data
+STAI_SelfConfident,State Trait Anxiety Inventory,Raw data
+STAI_Nervous,State Trait Anxiety Inventory,Raw data
+STAI_Jittery,State Trait Anxiety Inventory,Raw data
+STAI_HighStrung,State Trait Anxiety Inventory,Raw data
+STAI_Relaxed,State Trait Anxiety Inventory,Raw data
+STAI_Content,State Trait Anxiety Inventory,Raw data
+STAI_Worried,State Trait Anxiety Inventory,Raw data
+STAI_OverExcited,State Trait Anxiety Inventory,Raw data
+STAI_Joyful,State Trait Anxiety Inventory,Raw data
+STAI_Pleasant,State Trait Anxiety Inventory,Raw data
+SENS_PreferAlone,Self-evaluation of negative symptoms scale,Raw data
+SENS_BetterAlone,Self-evaluation of negative symptoms scale,Raw data
+SENS_UncomfortableNear,Self-evaluation of negative symptoms scale,Raw data
+SENS_NotInterested,Self-evaluation of negative symptoms scale,Raw data
+SENS_Contact,Self-evaluation of negative symptoms scale,Raw data
+SENS_NoEmo,Self-evaluation of negative symptoms scale,Raw data
+SENS_EmoLife,Self-evaluation of negative symptoms scale,Raw data
+SENS_EmoFilm,Self-evaluation of negative symptoms scale,Raw data
+SENS_DifficultRead,Self-evaluation of negative symptoms scale,Raw data
+SENS_MuchTalk,Self-evaluation of negative symptoms scale,Raw data
+SENS_HardTalk,Self-evaluation of negative symptoms scale,Raw data
+SENS_DontTalk,Self-evaluation of negative symptoms scale,Raw data
+SENS_FriendTalk,Self-evaluation of negative symptoms scale,Raw data
+SENS_Objectives,Self-evaluation of negative symptoms scale,Raw data
+SENS_StickToThings,Self-evaluation of negative symptoms scale,Raw data
+SENS_Motivation,Self-evaluation of negative symptoms scale,Raw data
+SENS_Wash,Self-evaluation of negative symptoms scale,Raw data
+SENS_PleasTalk,Self-evaluation of negative symptoms scale,Raw data
+SENS_PleasChoice,Self-evaluation of negative symptoms scale,Raw data
+SENS_Imagine,Self-evaluation of negative symptoms scale,Raw data
+SENS_sex,Self-evaluation of negative symptoms scale,Raw data
+TEPS_LookForward,Temporal experience of pleasure scale,Raw data
+TEPS_Fire,Temporal experience of pleasure scale,Raw data
+TEPS_FavFood,Temporal experience of pleasure scale,Raw data
+TEPS_Rain,Temporal experience of pleasure scale,Raw data
+TEPS_Grass,Temporal experience of pleasure scale,Raw data
+TEPS_Breath,Temporal experience of pleasure scale,Raw data
+TEPS_Restaurant,Temporal experience of pleasure scale,Raw data
+TEPS_Coffee,Temporal experience of pleasure scale,Raw data
+TEPS_Hair,Temporal experience of pleasure scale,Raw data
+TEPS_Yawn,Temporal experience of pleasure scale,Raw data
+TEPS_Park,Temporal experience of pleasure scale,Raw data
+TEPS_Holiday,Temporal experience of pleasure scale,Raw data
+TEPS_Snowfall,Temporal experience of pleasure scale,Raw data
+TEPS_Cookie,Temporal experience of pleasure scale,Raw data
+TEPS_Pleasure,Temporal experience of pleasure scale,Raw data
+TEPS_LookThings,Temporal experience of pleasure scale,Raw data
+TEPS_Menu,Temporal experience of pleasure scale,Raw data
+TEPS_Movie,Temporal experience of pleasure scale,Raw data
+RPA_Energy,Responses to positive affect ,Raw data
+RPA_Brag,Responses to positive affect ,Raw data
+RPA_GoWrong,Responses to positive affect ,Raw data
+RPA_Luck,Responses to positive affect ,Raw data
+RPA_Happy,Responses to positive affect ,Raw data
+RPA_Potential,Responses to positive affect ,Raw data
+RPA_WontLast,Responses to positive affect ,Raw data
+RPA_Savor,Responses to positive affect ,Raw data
+RPA_Proud,Responses to positive affect ,Raw data
+RPA_Concentrate,Responses to positive affect ,Raw data
+RPA_GoneWell,Responses to positive affect ,Raw data
+RPA_TooGood,Responses to positive affect ,Raw data
+RPA_Achieving,Responses to positive affect ,Raw data
+RPA_Strong,Responses to positive affect ,Raw data
+RPA_Deserve,Responses to positive affect ,Raw data
+RPA_GettingDone,Responses to positive affect ,Raw data
+RPA_UpToEverything,Responses to positive affect ,Raw data
+VVIQ_Contour,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Poses,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Carriage,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Clothes,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Sun,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Sky,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Storm,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Rainbow,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Shop,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Window,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Entrance,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Counter,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Landscape,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Trees,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Lake,Vividness of visual imagery questionnaire,Raw data
+VVIQ_Wind,Positive and negative affect schedule,Raw data
+PANAS_Interested,Positive and negative affect schedule,Raw data
+PANAS_Distressed,Positive and negative affect schedule,Raw data
+PANAS_Excited,Positive and negative affect schedule,Raw data
+PANAS_Upset,Positive and negative affect schedule,Raw data
+PANAS_Strong,Positive and negative affect schedule,Raw data
+PANAS_Guilty,Positive and negative affect schedule,Raw data
+PANAS_Scared,Positive and negative affect schedule,Raw data
+PANAS_Hostile,Positive and negative affect schedule,Raw data
+PANAS_Enthusiastic,Positive and negative affect schedule,Raw data
+PANAS_Proud,Positive and negative affect schedule,Raw data
+PANAS_Irritable,Positive and negative affect schedule,Raw data
+PANAS_Alert,Positive and negative affect schedule,Raw data
+PANAS_Ashamed,Positive and negative affect schedule,Raw data
+PANAS_Inspired,Positive and negative affect schedule,Raw data
+PANAS_Nervous,Positive and negative affect schedule,Raw data
+PANAS_Determined,Positive and negative affect schedule,Raw data
+PANAS_Attentive,Positive and negative affect schedule,Raw data
+PANAS_Jittery,Positive and negative affect schedule,Raw data
+PANAS_Active,Positive and negative affect schedule,Raw data
+PANAS_Afraid,Positive and negative affect schedule,Raw data
+MASQ_Confused,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Startled,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Successful,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Worthless,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Nauseous,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Happy,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Irritable,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Dizzy,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Optimistic,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Hopeless,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Fun,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_SelfBlame,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Dissatisfied,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Accomplished,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Trembling,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_LookForward,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Pessimistic,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_ChestPain,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Talkative,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_HotOrCold,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_ShortOfBreath,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_UpLively,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Inferior,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_MuscleTension,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Decisions,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Energy,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_HeartRacing,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_Worried,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_ReallyGood,Mood and anxiety symptoms questionnaire,Raw data
+MASQ_TroubleSwallowing,Mood and anxiety symptoms questionnaire,Raw data
+BB_Family,BIS/BAS scale,Raw data
+BB_NoFear,BIS/BAS scale,Raw data
+BB_GoOutofWay,BIS/BAS scale,Raw data
+BB_KeepAtIt,BIS/BAS scale,Raw data
+BB_TryNew,BIS/BAS scale,Raw data
+BB_Dress,BIS/BAS scale,Raw data
+BB_Energized,BIS/BAS scale,Raw data
+BB_Criticism,BIS/BAS scale,Raw data
+BB_GoGetIt,BIS/BAS scale,Raw data
+BB_DoFun,BIS/BAS scale,Raw data
+BB_HardToFindTime,BIS/BAS scale,Raw data
+BB_MoveRightAway,BIS/BAS scale,Raw data
+BB_WorryAngry,BIS/BAS scale,Raw data
+BB_Excited,BIS/BAS scale,Raw data
+BB_SpurMoment,BIS/BAS scale,Raw data
+BB_ThinkPleasant,BIS/BAS scale,Raw data
+BB_WonderAct,BIS/BAS scale,Raw data
+BB_AffectStrong,BIS/BAS scale,Raw data
+BB_WorryPoor,BIS/BAS scale,Raw data
+BB_CraveExcitement,BIS/BAS scale,Raw data
+BB_HoldsBarred,BIS/BAS scale,Raw data
+BB_FewFears,BIS/BAS scale,Raw data
+BB_Contest,BIS/BAS scale,Raw data
+BB_Mistakes,BIS/BAS scale,Raw data
+GAD_Nervous,GAD-7,Raw data
+GAD_UncontrolWorry,GAD-7,Raw data
+GAD_WorryDiffThings,GAD-7,Raw data
+GAD_TroubleRelaxing,GAD-7,Raw data
+GAD_Restless,GAD-7,Raw data
+GAD_Irritable,GAD-7,Raw data
+GAD_Dread,GAD-7,Raw data
+PHQ_InterestPleasure,PHQ-9,Raw data
+PHQ_Depressed,PHQ-9,Raw data
+PHQ_Sleep,PHQ-9,Raw data
+PHQ_Tired,PHQ-9,Raw data
+PHQ_Appetite,PHQ-9,Raw data
+PHQ_Failure,PHQ-9,Raw data
+PHQ_Concentrating,PHQ-9,Raw data
+PHQ_MoveSlow,PHQ-9,Raw data
+PHQ_SelfHarm,PHQ-9,Raw data
+STAI_TOTAL,Total STAI score,Scored total/subscale data
+SENS_TOTAL,Total SENS score,Scored total/subscale data
+TEPS_ANT,TEPS anticipation subscale,Scored total/subscale data
+TEPS_CON,TEPS consumption subscale,Scored total/subscale data
+RPA_EmoFocus,RPA emotion focus subscale,Scored total/subscale data
+RPA_Dampening,RPA dampening subscale,Scored total/subscale data
+RPA_SelfFocus,RPA self focus subscale,Scored total/subscale data
+VVIQ_TOTAL,Total VVIQ score,Scored total/subscale data
+PANAS_POS,PANAS positive emotion subscale,Scored total/subscale data
+PANAS_NEG,PANAS negative emotion subscale,Scored total/subscale data
+MASQ_GD,MASQ general distress subscale,Scored total/subscale data
+MASQ_AD,MASQ anhedonic depression subscale,Scored total/subscale data
+MASQ_AA,MASQ anxious arousal subscale,Scored total/subscale data
+BAS_Drive,BIS/BAS Drive subscale (BAS),Scored total/subscale data
+BAS_FS,BIS/BAS Fun seeking subscale (BAS),Scored total/subscale data
+BAS_RR,BIS/BAS Reward responsiveness subscale (BAS),Scored total/subscale data
+BIS,BIS subscale,Scored total/subscale data
+GAD_TOTAL,Total GAD-7 score,Scored total/subscale data
+PHQ_TOTAL,Total PHQ-9 score,Scored total/subscale data
+Order1PosFirst2NegFirst,Order of training (1=positive CBM training first; 2=negative CBM training first),Behavioural session meta-data
+CBMcompletedata1yes0no,Complete CBM data? (1=yes; 0=no),Behavioural session meta-data
+POS_EEfRT_prop_hard_choice_lowprob,POSITIVE CBM condition - EEfRT task - low probability score,EEfRT task data
+POS_EEfRT_prop_hard_choice_medprob,POSITIVE CBM condition - EEfRT task - medium probability score,EEfRT task data
+POS_EEfRT_prop_hard_choice_highprob,POSITIVE CBM condition - EEfRT task - high probability score,EEfRT task data
+NEG_EEfRT_prop_hard_choice_lowprob,NEGATIVE CBM condition - EEfRT task - low probability score,EEfRT task data
+NEG_EEfRT_prop_hard_choice_medprob,NEGATIVE CBM condition - EEfRT task - medium probability score,EEfRT task data
+NEG_EEfRT_prop_hard_choice_highprob,NEGATIVE CBM condition - EEfRT task - high probability score,EEfRT task data
+POSCBMTrainingaccuracy,POSITIVE CBM: accuracy scores during 'training' trials,CBM data
+POSCBMTestingaccuracy,POSITIVE CBM: accuracy scores during 'testing' trials,CBM data
+NEGCBMTrainingaccuracy,NEGATIVE CBM: accuracy scores during 'training' trials,CBM data
+NEGCBMTestingaccuracy,NEGATIVE CBM: accuracy scores during 'testing' trials,CBM data
+RT_POS_TRAINING_IDX,Recognition test score: after positive CBM training,CBM data
+RT_NEG_TRAINING_IDX,Recognition test score: after negative CBM training,CBM data
+POS_CBM_ANX_r1,POSITIVE CBM: Anxiety rating: time point 1 (pre-CBM training),Mood ratings
+POS_CBM_ANX_r2,POSITIVE CBM: Anxiety rating: time point 2 (post-CBM training),Mood ratings
+POS_CBM_ANX_r3,POSITIVE CBM: Anxiety rating: time point 3 (post-filler task),Mood ratings
+POS_CBM_ANX_r4,POSITIVE CBM: Anxiety rating: time point 4 (post EEfRT task),Mood ratings
+POS_CBM_DEP_r1,POSITIVE CBM: Depression rating: time point 1 (pre-CBM training),Mood ratings
+POS_CBM_DEP_r2,POSITIVE CBM: Depression rating: time point 2 (post-CBM training),Mood ratings
+POS_CBM_DEP_r3,POSITIVE CBM: Depression rating: time point 3 (post-filler task),Mood ratings
+POS_CBM_DEP_r4,POSITIVE CBM: Depression rating: time point 4 (post EEfRT task),Mood ratings
+POS_CBM_HAP_r1,POSITIVE CBM: Happiness rating: time point 1 (pre-CBM training),Mood ratings
+POS_CBM_HAP_r2,POSITIVE CBM: Happiness rating: time point 2 (post-CBM training),Mood ratings
+POS_CBM_HAP_r3,POSITIVE CBM: Happiness rating: time point 3 (post-filler task),Mood ratings
+POS_CBM_HAP_r4,POSITIVE CBM: Happiness rating: time point 4 (post EEfRT task),Mood ratings
+NEG_CBM_ANX_r1,NEGATIVE CBM: Anxiety rating: time point 1 (pre-CBM training),Mood ratings
+NEG_CBM_ANX_r2,NEGATIVE CBM: Anxiety rating: time point 2 (post-CBM training),Mood ratings
+NEG_CBM_ANX_r3,NEGATIVE CBM: Anxiety rating: time point 3 (post-filler task),Mood ratings
+NEG_CBM_ANX_r4,NEGATIVE CBM: Anxiety rating: time point 4 (post EEfRT task),Mood ratings
+NEG_CBM_DEP_r1,NEGATIVE CBM: Depression rating: time point 1 (pre-CBM training),Mood ratings
+NEG_CBM_DEP_r2,NEGATIVE CBM: Depression rating: time point 2 (post-CBM training),Mood ratings
+NEG_CBM_DEP_r3,NEGATIVE CBM: Depression rating: time point 3 (post-filler task),Mood ratings
+NEG_CBM_DEP_r4,NEGATIVE CBM: Depression rating: time point 4 (post EEfRT task),Mood ratings
+NEG_CBM_HAP_r1,NEGATIVE CBM: Happiness rating: time point 1 (pre-CBM training),Mood ratings
+NEG_CBM_HAP_r2,NEGATIVE CBM: Happiness rating: time point 2 (post-CBM training),Mood ratings
+NEG_CBM_HAP_r3,NEGATIVE CBM: Happiness rating: time point 3 (post-filler task),Mood ratings
+NEG_CBM_HAP_r4,NEGATIVE CBM: Happiness rating: time point 4 (post EEfRT task),Mood ratings
+RT_Diff_Score,Difference in Recognition Task scores (between positive and negative CBM training),Difference scores (calculated)
+EEfRT_LowProb_DiffScore,Difference in EEfRT Task scores: low probability,
+EEfRT_MedProb_DiffScore,Difference in EEfRT Task scores: medium probability,
+EEfRT_HighProb_DiffScore,Difference in EEfRT Task scores: high probability,
+mean_POS_EEfRT,Mean EEfRT task score: averaged across probability levels - POS CBM,
+mean_NEG_EEfRT,Mean EEfRT task score: averaged across probability levels - NEG CBM,

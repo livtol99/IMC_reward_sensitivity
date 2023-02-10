@@ -35,7 +35,10 @@ df_CBM  <- subset(df_CBM ,exclude == 0 )
 #Replace weird column values with NA
 df_CBM [df_CBM  == "#NULL!"] <- NA
 
+#Remove NAs before Creating the averaged scores
+
 as_tibble(df_CBM )
+
 
 # Make all EEfRT columns numeric
 # MAKE THIS CODE LESS MANUAL AT SOME POINT
@@ -76,7 +79,7 @@ write.csv(df_CBM, "./data/preprocessed.csv", row.names=FALSE)
 
 ```{r}
 # Loading in preprocessed data - when running code again
-# df <- read.csv("./data/preprocessed.csv")
+ df <- read.csv("./data/preprocessed.csv")
 ```
 
 ### Correlate with baseline measures 
@@ -86,7 +89,8 @@ write.csv(df_CBM, "./data/preprocessed.csv", row.names=FALSE)
 ```{r}
 # Subset all columns containing EEfRT and the baseline measures - to make the task of correlations easier to overview
 # Baseline measures include all MASQ-, TEPS, and BIS/BAs-columns
-sub <- df_CBM %>% select(c((1:7),EEfRT_averaged_lowp, EEfRT_averaged_medp, EEfRT_averaged_highp, TEPS_ANT, TEPS_CON, MASQ_GD, MASQ_AD, MASQ_AA, BAS_Drive, BAS_FS, BAS_RR, BIS))
+sub <- df %>% select(c((1:7), EEfRT_averaged_lowp, EEfRT_averaged_medp, EEfRT_averaged_highp, TEPS_ANT, TEPS_CON, MASQ_GD, MASQ_AD, MASQ_AA, BAS_Drive, BAS_FS, BAS_RR, BIS))
+
 
 # #Removing non-useful columns in order to make the corr matrix work easily
 sub$exclude <- NULL 
@@ -146,6 +150,20 @@ Output of the correlation analysis
 - For the low probabilit category, a small positive correlation (0.29) was found between the averaged EEfRT score and the MASQ.AA measure (p<0.05). Otherwise, no significant correlations were found for this probability category and the rest of the measure
 
 
+```{r}
+#Descriptive stats - describing the data sample
+sapply(sub, class)
+sub <- na.omit(sub)
+
+#Number of participants in each gender group
+sub %>% count(Gender, sort = TRUE) #45 women, 18 men
+
+#Number of participants in each nationality group
+sub %>% count(Nationality, sort = TRUE) #There are 24 different nationalities, with most people coming from Britain
+
+
+
+```
 
 
 

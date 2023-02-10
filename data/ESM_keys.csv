@@ -1,0 +1,47 @@
+Actual_ID,ESM study ID,
+Day,Numbered 1-7 from date started study,
+TrigIndex,Numbered 1-49 from first possible to last possible survey (7 times per day for 7 days),
+"Excluded for Low Participation (1 = no, 2 = yes)",Calculated variable (should correspond to excluding those with <20% completion),
+ConPleasure,"""How much are you enjoying this activity?” (in reference to current activity)","7-point Likert scale, ranging from “1 Not at all” to “7 Very much so”"
+AntPleasure,“How much do you think you will enjoy this activity” (in reference to future activity),"7-point Likert scale, ranging from “1 Not at all” to “7 Very much so”"
+PA,mean of positive affect items,
+NA,mean of negative affect items,
+"These variables are in the full dataset, but not required for planned analyses",,
+ID_Participant_MetricWire,Metricwire ID,
+Device,device info,
+DeviceVers,device info,
+AppVers,device info,
+DeviceID,device info,
+Date,date of data collection,
+StartTime,Time survey started,
+FinTime,Time survey ended,
+DurTime,Time taken to complete survey,
+TrigTime,Time trigger for survey sent,
+RespTime,Time between sending trigger and starting survey,
+CurrentAct,Type of current activity (checklist),1 = Functional ('Work/School'; 'Studying'; 'Housekeeping'; 'Shopping'; 'Hygiene'; 'Eating/Drinking' or 'Traveling'); 2 = Resting ('Relaxing'); 3 = Leisure ('Leisure activity'); 4 = Nothing
+FutureAct,Type of 'next' (i.e. future) activity (checklist),1 = Functional ('Work/School'; 'Studying'; 'Housekeeping'; 'Shopping'; 'Hygiene'; 'Eating/Drinking' or 'Traveling'); 2 = Resting ('Relaxing'); 3 = Leisure ('Leisure activity'); 4 = Nothing
+LikelihoodFutAct,“How likely is it that this activity will occur?” (in reference to future activity),"7-point Likert scale, ranging from “1 Not at all” to “7 Very much so”"
+Motivation,Sum of 'InterestFutAct' and 'PreferDif',
+InterestFutAct,“How interested are you in this activity?” (in reference to future activity),"7-point Likert scale, ranging from “1 Not at all” to “7 Very much so”"
+PreferDif,"""Would you prefer to do something else?”","7-point Likert scale, ranging from “1 Not at all” to “7 Very much so”"
+CurSoc,- can look up phrasing if needed,"1 = 'Familiar' (“Partner”, “Friends”, “Family”, “Colleagues”, “Acquaintances”); 2 = 'Unfamiliar' (""Strangers”); 3 = Nobody"
+FutSoc,- can look up phrasing if needed,"1 = 'Familiar' (“Partner”, “Friends”, “Family”, “Colleagues”, “Acquaintances”); 2 = 'Unfamiliar' (""Strangers”); 3 = Nobody"
+PrefAlone,"“How much do you agree with the following statement? Right now, I would prefer to be alone than with others.”","7-point Likert scale, ranging from “1 Not at all” to “7 Very much so”"
+"For next 12 variables, phrased as ""Right now, I feel...""",,
+LNA_Gloomy,Gloomy,0-100 VAS
+HPA_Energetic,Energetic,0-100 VAS
+HNA_Anxious,Anxious ,0-100 VAS
+LPA_Relaxed,Relaxed,0-100 VAS
+HPA_Enthusiastic,Enthusiastic,0-100 VAS
+LNA_Dull,Dull,0-100 VAS
+HNA_Nervous,Nervous,0-100 VAS
+LPA_Content,Content,0-100 VAS
+LNA_Tired,Tired,0-100 VAS
+HPA_Cheerful,Cheerful,0-100 VAS
+HNA_Irritable,Irritable,0-100 VAS
+LPA_Calm,Calm,0-100 VAS
+LPA,Low arousal positive affect (mean of LPA_* variables),
+HPA,High arousal positive affect (mean of HPA_* variables),
+LNA,Low arousal negative affect (mean of LPA_* variables),
+HNA,High arousal negative affect (mean of HNA_* variables),
+NOTE:,LNA = low arousal negative affect; LPA = low arousal positive affect; HNA = high arousal negative affect; HPA = high arousal positive affect,

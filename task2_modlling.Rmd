@@ -22,6 +22,163 @@ Q: Does lab-measured reward anticipation (averaged EEfRT scores) predict self-re
 
 
 ```{r}
-#Loading pa
+#Loading packages 
+
+pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "nlme", "lme4", "lmerTest", "JWileymisc","multilevelTools")
+
+
 ```
+
+```{r}
+#Loading ESM data
+
+ESM <- read.csv("./data/ESM_reduced.csv")
+ESM_keys <- read.csv("./data/ESM_keys.csv")
+
+unique(ESM$Actual_ID) # P022 was never there from the beginning
+
+### Removing the excluded rows for low participation
+
+#Are there still 2-s in the column?
+ESM$Excluded.for.Low.Participation..1...no..2...yes. <-  as.factor(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+is.factor(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+unique(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+
+# keeping an overview of what participants were removed - for matching with the CBM df
+ESM_exluded_low_part <- filter(ESM, Excluded.for.Low.Participation..1...no..2...yes. == "2")
+ESM_exluded_low_part_ID <- unique(ESM_exluded_low_part$Actual_ID) #The IDs removed are P010, P019, P020, P028, P038, P041, P049, P506, P513
+
+#Removing from main df
+ESM <- filter(ESM, Excluded.for.Low.Participation..1...no..2...yes. != "2")
+unique(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+
+length(unique(ESM$Actual_ID)) #There are 67 unique participants in this df
+
+
+
+##############################
+#CBM data set
+CBM <- read.csv("./data/preprocessed.csv")
+CBM_vars <- read.csv("./data/CBM_variables.csv")
+
+length(unique(CBM$ID)) #There are 79 unique IDs - 12 more than in the ESM data
+
+#Replace weird column values with NA
+CBM[CBM  == "#NULL!"] <- NA
+
+
+#Selecting only the relevant columns in the CBM data for better overview
+CBM_sub <- CBM %>% select(c(1:7), 
+                          EEfRT_averaged_lowp, 
+                          EEfRT_averaged_medp, 
+                          EEfRT_averaged_highp,
+                          EEfRT_LowProb_DiffScore,
+                          EEfRT_MedProb_DiffScore,
+                          EEfRT_HighProb_DiffScore,
+                          POSCBMTrainingaccuracy,	
+                          POSCBMTestingaccuracy,
+                          NEGCBMTrainingaccuracy,
+                          NEGCBMTestingaccuracy,
+                          RT_POS_TRAINING_IDX,
+                          RT_NEG_TRAINING_IDX,
+                          RT_Diff_Score,
+                          TEPS_ANT, TEPS_CON, MASQ_AA, MASQ_GD, MASQ_AD,  BAS_Drive, BAS_FS,BAS_RR, BIS)
+
+CBM_sub$exclude <- NULL
+CBM_sub$participant_id <- NULL
+
+# 16 participants have NAs in their EEfRT columns - due to lacking EEfRT scores
+
+#Removing the participants not included in the ESM df first to inspect what IDs are left
+CBM_sub <- filter(CBM_sub, ID != "P010")
+CBM_sub <- filter(CBM_sub, ID != "P019")
+CBM_sub <- filter(CBM_sub, ID != "P020")
+CBM_sub <- filter(CBM_sub, ID != "P028")
+CBM_sub <- filter(CBM_sub, ID != "P038")
+CBM_sub <- filter(CBM_sub, ID != "P041")
+CBM_sub <- filter(CBM_sub, ID != "P049")
+CBM_sub <- filter(CBM_sub, ID != "P506")
+CBM_sub <- filter(CBM_sub, ID != "P513")
+
+length(unique(CBM_sub$ID)) #Length is now 70, but 12 problematic participants are left. Only 4 of those removed were NA-participants
+
+# Looking into the original df for these participants - what is the issue?
+#The problematic IDs are: P003, P024, P036, P501, P509, P510, P512, P515, P525, P526, P535, P536
+probID <- subset(CBM, ID %in% c("P003", "P024", "P036", "P501", "P509", "P510", "P512", "P515", "P525", "P526", "P535", "P536"))
+
+
+#Further inspection shows that the problematic IDs are caused by NAs in the various prob categories of the EEfRT measurements - so incomplete CBM data. Removing all of them
+CBM_sub <- CBM_sub %>% filter(!ID %in% c("P003", "P024", "P036", "P501", "P509", "P510","P512", "P515", "P525", "P526", "P535", "P536")) #The resulting df 
+
+
+#Unique IDs in the subsetted CBM data
+length(unique(CBM_sub$ID)) #The resulting df now has 58 unique participants. There were 67 in the ESM data. 
+CBM_sub_unique_IDs <- unique(CBM_sub$ID)
+
+#Looking at which IDS in the ESM df do not occur in the CBM df
+unique(ESM$Actual_ID)
+
+unique(CBM_sub$ID)
+
+#The IDs that occur in the ESM data but not in the CBM data are:
+#P024, P036, P501, P509, P512, P525, P526, P535, P536 (9 in total)
+#Removing them from the ESM data:
+ESM <- ESM %>% filter(!Actual_ID %in% c("P003","P024", "P036", "P501", "P509", "P512", "P525", "P526", "P535", "P536"))
+
+unique(ESM$Actual_ID)
+
+unique(CBM_sub$ID)
+
+#P022 is in CBM sub - but was never there for ESM. Removing P022 from CBM_sub
+CBM_sub <- CBM_sub %>% filter(!ID %in% "P022")
+
+length(unique(ESM$Actual_ID))
+length(unique(CBM_sub$ID)) #The two dfs are now equal 
+
+```
+
+
+
+```{r}
+#The next task is to add three EEfRT columns to the ESM data frame, replicating their scores across each row every partipant has
+#Rename Actual_ID in ESM df to ID
+ESM <- ESM %>% rename(ID = Actual_ID)
+
+#Creating a merged column of subject and day
+ESM$subj_day <- paste(ESM$ID, ESM$Day)
+
+#Merging the two dfs
+ESM_merged <- merge(ESM, CBM_sub, all.x=TRUE, by="ID")
+ESM_merged <- as_tibble(ESM_merged)
+
+#reordering columns for better overview
+ESM_merged <- ESM_merged  %>% relocate(subj_day, .after=Day)
+ESM_merged <- ESM_merged  %>% relocate(Excluded.for.Low.Participation..1...no..2...yes., .after=BIS)
+ESM_merged <- ESM_merged  %>% relocate(StartDate, .after=Excluded.for.Low.Participation..1...no..2...yes.)
+ESM_merged <- ESM_merged  %>% relocate(Nationality, .after=StartDate)
+
+
+```
+
+
+
+
+
+
+```{r}
+ESM %>%
+    group_by(Actual_ID) %>%
+    summarise(count=n())
+```
+
+
+
+
+
+
+
+
+
+
+
 
