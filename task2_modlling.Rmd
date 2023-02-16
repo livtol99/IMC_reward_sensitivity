@@ -162,6 +162,8 @@ ESM_merged <- ESM_merged  %>% relocate(StartDate, .after=Excluded.for.Low.Partic
 ESM_merged <- ESM_merged  %>% relocate(Nationality, .after=StartDate)
 
 
+mergeddf <- write.csv(ESM_merged, "./data/ESM_CBM_merged")
+
 ```
 
 ## Actual modelling
@@ -179,6 +181,73 @@ Christine writes that the multilevel analysis should contain:
 - running models (with and without outliers)
 - generating some plots at the end
 
+
+# Inspecting the distributions of the data (once more :PPP)
+```{r}
+#Distribution of experienced and anticipated pleasure scores
+hist(ESM_merged$AntPleasure, col = 'coral2')
+hist(ESM_merged$ConPleasure, col = 'steelblue')
+
+
+#Looking into exact summaries per pleasure score 
+# The total distributions are very even across the two measures
+Ant_pl <- ESM_merged %>%
+  group_by(AntPleasure) %>%
+  summarise(counts = n())
+
+Con_pl <- ESM_merged %>%
+  group_by(ConPleasure) %>%
+  summarise(counts = n())
+
+
+Ant_pl
+Con_pl
+
+
+#Distribution of proportions according to reward probability 
+hist(ESM_merged$EEfRT_averaged_lowp, col = 'coral2') # When the probability of reward is low, the general tendency is for people to not make very much effort (low proportions of people chose the hard task)
+hist(ESM_merged$EEfRT_averaged_medp, col = 'green') # When the probability of reward is medium, there is a tendency that 50/50 chooses either the hard or the low task
+hist(ESM_merged$EEfRT_averaged_highp, col = 'blue') #When the probability of reward is high, there is a tendency that most people choose the hard task
+
+
+#Relationship between the two outcome variables - Are they correlated? (Colour by ID or Day)
+ggplot(ESM_merged, aes(x=AntPleasure, y=ConPleasure, colour = ID)) + geom_point() + geom_jitter() #Inspection of the plot shows us that the two outcome measures most likely are correlated, with the spread of scores also being equal to each side from the midline. Seems to be relatively even across participants and days
+
+# Plotting relationship between Con Pleasure/Ant pleasure and the three probability scores, varying according to the participants
+
+
+# #From long to wide data
+library(tidyr)
+wide <- ESM_merged %>% pivot_longer(cols=c('EEfRT_averaged_lowp', 'EEfRT_averaged_medp', 'EEfRT_averaged_highp'),
+                    names_to='prob_cond',
+                    values_to='Hard_task_proportion')
+
+wide$dummy_probability <- with(wide, ifelse(scored > allowed, 'Win', 'Loss'))
+
+#Add new column with dummy variables for the probability condition
+# Create dummy variables for 2 columns
+wide$dummy_prob_group <- NA
+wide$dummy_prob_group[wide$prob_cond == "EEfRT_averaged_lowp"] <- 1
+wide$dummy_prob_group[wide$prob_cond == "EEfRT_averaged_medp"] <- 2
+wide$dummy_prob_group[wide$prob_cond == "EEfRT_averaged_highp"] <- 3
+
+unique(wide$dummy_prob_group)
+
+
+# Create a line plot with all conditions in one - to see pattern differences
+ggplot(wide, aes(x = dummy_prob_group, y = Hard_task_proportion, color = ID)) + geom_line() +
+  scale_x_continuous(breaks = seq(1, 3, by = 1))
+
+
+# Inspect the distribution of anticipated pleasure and experienced pleasure across days for each participant
+ggplot(wide, aes(x = Day, y = AntPleasure, color = ID)) + geom_line() +
+  scale_x_continuous(breaks = seq(1, 3, by = 1))
+
+#If  the variables are correlated (so if the proportion of hard task is correlated with the probability condition) - this is an indication of whether or not we should keep the model as they want it to
+
+```
+
+
 ```{r}
 #Inspecting range of EEfRT ratios (predictors)
 min(ESM_merged$EEfRT_averaged_lowp) #0
@@ -191,17 +260,30 @@ min(ESM_merged$EEfRT_averaged_highp) #0.03
 max(ESM_merged$EEfRT_averaged_highp) #0.1
 
 
-#Consider centering the outcome variable
 ```
-
-
 
 
 ```{r}
-ESM %>%
-    group_by(Actual_ID) %>%
-    summarise(count=n())
+#simply fitting the models to see what we've got 
+# No centering, no residual checks, and treating the outcome as continuous (not doing an ordinal regression)
+
+test_ant_pl <- lmer(AntPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|subj_day) + (1|ID),  
+                        data = ESM_merged, 
+                        REML = FALSE, 
+                        na.action = "na.omit", 
+                        control = lmerControl(optimizer = "bobyqa"))
+
+test_con_pl <- lmer(ConPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|subj_day) + (1|ID),  
+                        data = ESM_merged, 
+                        REML = FALSE, 
+                        na.action = "na.omit", 
+                        control = lmerControl(optimizer = "bobyqa"))
+
+summary(test_ant_pl)
+summary(test_con_pl)
+
 ```
+
 
 
 
