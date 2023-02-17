@@ -304,6 +304,29 @@ max(ESM_merged$EEfRT_averaged_highp) #0.1
 ```
 
 #Modelling
+
+#Linear regression:
+For linear regression to work in this context, The outcome variable of daily life reward anticipation (ant_ or con_pleasure) must be in a continuous format. As of now, these variables are ordinal. The question is then if it makes sense to mean transform these scores. If not, it is worth considering a different modeling approach, such a cumulative link model (mixed effects logistic regression)
+
+- LinReg uses a linear equation to identify the line of best fit - and thereby enables prediction of the output of the dependent variable based on the independent ones. 
+- lInear regression describes a linear relationship between variables
+- In this study, the question is thus: how are lab measures of reward anticipation linearly related to real life measures of the same?
+- Linear regression requires a continuous outcome variable - our outcome variable is not continuous unless we transform it to be so
+- calculates coefficients/estimates best fitting regression line through ordinary least squares
+
+# Logistic regression 
+A logistic regression is used to classify/predict a categorical (usually binary) outcome  based on previous observations of a data set. Independent variables are used to predict the occurrence or failure of specific events. Standard Logistic regression’s output lies between 0 and 1.
+
+- Logistic regression seeks to study and examine the probabilities of an event's occurrence.
+- In our case, the outcome variable is not binary, and so a standard logistic regression is not suitable. 
+- Calculates coefficients through maximum likelihood estimation
+
+
+The fact that I am asked to answer whether the lab measures of reward anticipation can predict the ESM measures of reward anticipation seems kind of strange, when really the power point seems to suggest that the question of interest really regards wether or not the two are associated with each other. 
+
+
+Cumulative link model
+This is a logistic regression model - and the task is becoming a classification task rather than a prediction task. 
 ```{r}
 # I do not think centering the predictors is necessary - there is a true meaningful 0 (our predictors are ratio variables)
 
