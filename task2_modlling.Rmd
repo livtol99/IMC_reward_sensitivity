@@ -213,8 +213,24 @@ hist(ESM_merged$EEfRT_averaged_highp, col = 'blue') #When the probability of rew
 #Relationship between the two outcome variables - Are they correlated? (Colour by ID or Day)
 ggplot(ESM_merged, aes(x=AntPleasure, y=ConPleasure, colour = ID)) + geom_point() + geom_jitter() #Inspection of the plot shows us that the two outcome measures most likely are correlated, with the spread of scores also being equal to each side from the midline. Seems to be relatively even across participants and days
 
-# Plotting relationship between Con Pleasure/Ant pleasure and the three probability scores, varying according to the participants
 
+#Are the predictors correlated?
+ggplot(ESM_merged, aes(x=EEfRT_averaged_medp, y=EEfRT_averaged_lowp, colour = ID)) + geom_point()
+ggplot(ESM_merged, aes(x=EEfRT_averaged_medp, y=EEfRT_averaged_highp, colour = ID)) + geom_point() 
+ggplot(ESM_merged, aes(x=EEfRT_averaged_lowp, y=EEfRT_averaged_highp, colour = ID)) + geom_point() 
+
+ggplot(ESM_merged, aes(EEfRT_averaged_medp, EEfRT_averaged_lowp)) + 
+  geom_point(color='blue') +
+  geom_smooth(method = "lm", colour = 'red')
+
+
+ggplot(ESM_merged, aes(EEfRT_averaged_medp, EEfRT_averaged_highp)) + 
+  geom_point(color='blue') +
+  geom_smooth(method = "lm", colour = 'red')
+
+ggplot(ESM_merged, aes(EEfRT_averaged_highp, EEfRT_averaged_lowp)) + 
+  geom_point(color='blue') +
+  geom_smooth(method = "lm", colour = 'red')
 
 # #From long to wide data
 library(tidyr)
@@ -222,7 +238,6 @@ wide <- ESM_merged %>% pivot_longer(cols=c('EEfRT_averaged_lowp', 'EEfRT_average
                     names_to='prob_cond',
                     values_to='Hard_task_proportion')
 
-wide$dummy_probability <- with(wide, ifelse(scored > allowed, 'Win', 'Loss'))
 
 #Add new column with dummy variables for the probability condition
 # Create dummy variables for 2 columns
@@ -240,10 +255,36 @@ ggplot(wide, aes(x = dummy_prob_group, y = Hard_task_proportion, color = ID)) + 
 
 
 # Inspect the distribution of anticipated pleasure and experienced pleasure across days for each participant
-ggplot(wide, aes(x = Day, y = AntPleasure, color = ID)) + geom_line() +
-  scale_x_continuous(breaks = seq(1, 3, by = 1))
+ggplot(ESM_merged, aes(x = AntPleasure, color = ID)) + geom_jitter(stat="count") +
+  scale_x_continuous(breaks = seq(1, 7, by = 1)) + facet_wrap(~Day) + labs(title = "Anticipated Pleasure",
+       subtitle = "(Visualised per day of measurement across IDs)", y = "Count", x = "Anticipated Pleasure - 7 pt. Likert Scale") + 
+  theme_bw() + theme(legend.position="none")
 
-#If  the variables are correlated (so if the proportion of hard task is correlated with the probability condition) - this is an indication of whether or not we should keep the model as they want it to
+
+ggplot(ESM_merged, aes(x = ConPleasure, color = ID)) + geom_jitter(stat="count") +
+  scale_x_continuous(breaks = seq(1, 7, by = 1)) + facet_wrap(~Day) + labs(title = "Experienced Pleasure",
+       subtitle = "(Visualised per day of measurement)",
+       y = "Count", x = "Anticipated Pleasure - 7 pt. Likert Scale") + theme_bw() + theme(legend.position="none")
+
+#These plot shows an indication that the response pattern does not vary much between days. The same response pattern is found between the two pleasure measures, with a tendency for all participants to have more responses in the positive end of the Likert-scale. (5-7)
+
+
+#Centering and scaling the two outcome variables
+#Adding a z-score column to the data frame for the pleasure scores (scaling)
+ESM_merged$ConPleasure_Z <- scale(ESM_merged$ConPleasure, center = T, scale = T)
+ESM_merged$AntPleasure_Z <- scale(ESM_merged$AntPleasure, center = T, scale = T)
+
+#Mean-Centering the outcome variables
+ESM_merged$ConPleasure_centered <- scale(ESM_merged$ConPleasure, center = T, scale = F)
+ESM_merged$AntPleasure_centered <- scale(ESM_merged$AntPleasure, center = T, scale = F)
+
+#Visualising the z-scored and centered outcome variables as distributions per participant
+
+ggplot(ESM_merged, aes(ConPleasure)) + geom_density(aes(x=ConPleasure, y=..density.., color = ID), bins=50) + facet_wrap(~ID) + theme(legend.position="none") + ggtitle("Experienced Pleasure - Uncentered") + scale_x_continuous(breaks = seq(1, 7, by = 1))
+
+ggplot(ESM_merged, aes(ConPleasure_Z)) + geom_density(aes(x=ConPleasure_Z, y=..density.., color = ID), bins=50) + facet_wrap(~ID) + theme(legend.position="none") + ggtitle("Experienced Pleasure - Z-scored") 
+
+ggplot(ESM_merged, aes(ConPleasure_centered)) + geom_density(aes(x=ConPleasure_centered, y=..density.., color = ID), bins=50) + facet_wrap(~ID) + theme(legend.position="none")+ ggtitle("Experienced Pleasure - Population Mean Centered") 
 
 ```
 
@@ -262,28 +303,124 @@ max(ESM_merged$EEfRT_averaged_highp) #0.1
 
 ```
 
-
+#Modelling
 ```{r}
+# I do not think centering the predictors is necessary - there is a true meaningful 0 (our predictors are ratio variables)
+
 #simply fitting the models to see what we've got 
 # No centering, no residual checks, and treating the outcome as continuous (not doing an ordinal regression)
 
-test_ant_pl <- lmer(AntPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|subj_day) + (1|ID),  
-                        data = ESM_merged, 
-                        REML = FALSE, 
-                        na.action = "na.omit", 
-                        control = lmerControl(optimizer = "bobyqa"))
+test_ant_pl <- lmer(AntPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|subj_day) + (1|ID), data = ESM_merged, REML = FALSE, na.action = "na.omit")
+
+
+?lmer
 
 test_con_pl <- lmer(ConPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|subj_day) + (1|ID),  
-                        data = ESM_merged, 
-                        REML = FALSE, 
-                        na.action = "na.omit", 
-                        control = lmerControl(optimizer = "bobyqa"))
+                        data = ESM_merged, REML = FALSE, na.action = "na.omit")
 
 summary(test_ant_pl)
 summary(test_con_pl)
 
+
+
+#Cannot use linear regression since our outcome measure really isn't continuous
+#Should rather do ordinal logistic regression
+
+
+
+#Centering predictors - tetsing the same models but with centered predictors
+ESM_merged$EEfRT_averaged_lowp_cen <- scale(ESM_merged$EEfRT_averaged_lowp, center = TRUE, scale = FALSE)
+ESM_merged$EEfRT_averaged_medp_cen <- scale(ESM_merged$EEfRT_averaged_medp, center = TRUE, scale = FALSE)
+ESM_merged$EEfRT_averaged_highp_cen <- scale(ESM_merged$EEfRT_averaged_highp, center = TRUE, scale = FALSE)
+
+test_ant_cen <- lmer(AntPleasure ~ EEfRT_averaged_lowp_cen + EEfRT_averaged_medp_cen + EEfRT_averaged_highp_cen + (1|subj_day) + (1|ID), data = ESM_merged, REML = FALSE, na.action = "na.omit")
+
+
+test_con_cen <- lmer(ConPleasure ~ EEfRT_averaged_lowp_cen + EEfRT_averaged_medp_cen + EEfRT_averaged_highp_cen + (1|subj_day) + (1|ID), data = ESM_merged, REML = FALSE, na.action = "na.omit")
+
+
+summary(test_ant_cen)
+summary(test_con_cen)
+summary(test_con_pl)
+
+
+#Testing cumulative link mixed models (haven't checked assumptions yet)
+
+
+# plot distributions
+d %>% 
+  gather(Variable, val, c("x", "x.c")) %>%
+  ggplot(aes(x = val, group = Variable, fill = Variable)) + 
+  geom_density(alpha = .4) + 
+  labs(x = "Variable X" , y = "Count") +
+  geom_vline(xintercept = mean(d$x),
+             linetype = "dashed") +
+  geom_vline(xintercept = mean(d$x.c),
+             linetype = "dashed") +
+  xlim(-1.5, 4) +
+  labs(x = "" , y = "Count") +
+  theme_classic()
+
 ```
 
+#Assumptions of linear regression
+The assumptions, for a linear mixed effects model,
+• The explanatory variables are related linearly to the response.
+• The residuals have constant variance (homogeneity of variance)
+• The residuals are Normally distributed.
+• The residuals are independent.
+
+```{r}
+
+#Linearity between predictors and outcome variable
+#This can be checked by plotting the residuals against the response and looking for any systematic shape, and by including non-linear terms (or splines) and comparing the model fit.
+
+
+#Testing assumptions
+#Normal residuals
+## extract residuals:
+res_ant <- residuals(test_ant_pl)
+qqnorm(res_ant)
+abline(0,1)
+hist(res_ant)
+
+
+res_con <- residuals(test_con_pl)
+qqnorm(res_ant)
+abline(0,1)
+hist(res_con)
+
+
+# So far, residuals don't look normal. Might have to transform data (still considering using a different model)
+
+
+
+# 2. homogeneity of variance (violated - there is a clear pattern)
+# The residuals have constant variance. This can be checked with a plot of residuals against fitted values - there should be no pattern/trend.
+plot(fitted(test_ant_pl), res_ant)
+abline(0,0) #add a horizontal line at 0 
+
+
+#3. Normally distributed residuals
+#This can be checked in many ways, such as a Q-Q plot and a simple histogram. Statistical tests, such as Anderson-Darling and Kolmogorov–Smirnov are also possible.
+
+#4. Independent residuals
+#This can be checked by plotting residuals against covariates - especially time-varying or spatial covariates. There should not be any systematic pattern
+
+
+
+
+
+
+
+
+```
+
+
+#Testing out ordinal linear regression
+```{r}
+
+```
 
 
 

@@ -147,7 +147,8 @@ corrplot(corr_mat) #With circles to represent correlations instead
 
 Output of the correlation analysis
 - For the high and medium probability categories, no relationship between the averaged EEfRT scores and baseline measures were found (p>.05)
-- For the low probabilit category, a small positive correlation (0.29) was found between the averaged EEfRT score and the MASQ.AA measure (p<0.05). Otherwise, no significant correlations were found for this probability category and the rest of the measure
+- For the low probability category, a small positive correlation (0.29) was found between the averaged EEfRT score and the MASQ.AA measure (p<0.05). Otherwise, no significant correlations were found for this probability category and the rest of the measure
+- Regarding the predictor variables - there seems to be a small positive correlation between the low and high probability EEfRT scores (p<0.05)
 
 
 ```{r}
