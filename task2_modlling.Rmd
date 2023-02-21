@@ -24,7 +24,9 @@ Q: Does lab-measured reward anticipation (averaged EEfRT scores) predict self-re
 ```{r}
 #Loading packages 
 
-pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "nlme", "lme4", "lmerTest", "JWileymisc","multilevelTools", "texreg")
+pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "nlme", "lme4", "lmerTest", "JWileymisc","multilevelTools", "texreg", "ordinal", "GGally")
+
+#The ordinal package allows for creating regression models for ordinal data
 
 
 ```
@@ -32,110 +34,110 @@ pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "
 ```{r}
 #Loading ESM data
 
-ESM <- read.csv("./data/ESM_reduced.csv")
-ESM_keys <- read.csv("./data/ESM_keys.csv")
-
-unique(ESM$Actual_ID) # P022 was never there from the beginning
-
-### Removing the excluded rows for low participation
-
-#Are there still 2-s in the column?
-ESM$Excluded.for.Low.Participation..1...no..2...yes. <-  as.factor(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
-is.factor(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
-unique(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
-
-# keeping an overview of what participants were removed - for matching with the CBM df
-ESM_exluded_low_part <- filter(ESM, Excluded.for.Low.Participation..1...no..2...yes. == "2")
-ESM_exluded_low_part_ID <- unique(ESM_exluded_low_part$Actual_ID) #The IDs removed are P010, P019, P020, P028, P038, P041, P049, P506, P513
-
-#Removing from main df
-ESM <- filter(ESM, Excluded.for.Low.Participation..1...no..2...yes. != "2")
-unique(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
-
-length(unique(ESM$Actual_ID)) #There are 67 unique participants in this df
-
-
-
-##############################
-#CBM data set
-CBM <- read.csv("./data/preprocessed.csv")
-CBM_vars <- read.csv("./data/CBM_variables.csv")
-
-length(unique(CBM$ID)) #There are 79 unique IDs - 12 more than in the ESM data
-
-#Replace weird column values with NA
-CBM[CBM  == "#NULL!"] <- NA
-
-
-#Selecting only the relevant columns in the CBM data for better overview
-CBM_sub <- CBM %>% select(c(1:7), 
-                          EEfRT_averaged_lowp, 
-                          EEfRT_averaged_medp, 
-                          EEfRT_averaged_highp,
-                          EEfRT_LowProb_DiffScore,
-                          EEfRT_MedProb_DiffScore,
-                          EEfRT_HighProb_DiffScore,
-                          POSCBMTrainingaccuracy,	
-                          POSCBMTestingaccuracy,
-                          NEGCBMTrainingaccuracy,
-                          NEGCBMTestingaccuracy,
-                          RT_POS_TRAINING_IDX,
-                          RT_NEG_TRAINING_IDX,
-                          RT_Diff_Score,
-                          TEPS_ANT, TEPS_CON, MASQ_AA, MASQ_GD, MASQ_AD,  BAS_Drive, BAS_FS,BAS_RR, BIS)
-
-CBM_sub$exclude <- NULL
-CBM_sub$participant_id <- NULL
-
-# 16 participants have NAs in their EEfRT columns - due to lacking EEfRT scores
-
-#Removing the participants not included in the ESM df first to inspect what IDs are left
-CBM_sub <- filter(CBM_sub, ID != "P010")
-CBM_sub <- filter(CBM_sub, ID != "P019")
-CBM_sub <- filter(CBM_sub, ID != "P020")
-CBM_sub <- filter(CBM_sub, ID != "P028")
-CBM_sub <- filter(CBM_sub, ID != "P038")
-CBM_sub <- filter(CBM_sub, ID != "P041")
-CBM_sub <- filter(CBM_sub, ID != "P049")
-CBM_sub <- filter(CBM_sub, ID != "P506")
-CBM_sub <- filter(CBM_sub, ID != "P513")
-
-length(unique(CBM_sub$ID)) #Length is now 70, but 12 problematic participants are left. Only 4 of those removed were NA-participants
-
-# Looking into the original df for these participants - what is the issue?
-#The problematic IDs are: P003, P024, P036, P501, P509, P510, P512, P515, P525, P526, P535, P536
-probID <- subset(CBM, ID %in% c("P003", "P024", "P036", "P501", "P509", "P510", "P512", "P515", "P525", "P526", "P535", "P536"))
-
-
-#Further inspection shows that the problematic IDs are caused by NAs in the various prob categories of the EEfRT measurements - so incomplete CBM data. Removing all of them
-CBM_sub <- CBM_sub %>% filter(!ID %in% c("P003", "P024", "P036", "P501", "P509", "P510","P512", "P515", "P525", "P526", "P535", "P536")) #The resulting df 
-
-
-#Unique IDs in the subsetted CBM data
-length(unique(CBM_sub$ID)) #The resulting df now has 58 unique participants. There were 67 in the ESM data. 
-CBM_sub_unique_IDs <- unique(CBM_sub$ID)
-
-#Looking at which IDS in the ESM df do not occur in the CBM df
-unique(ESM$Actual_ID)
-
-unique(CBM_sub$ID)
-
-#The IDs that occur in the ESM data but not in the CBM data are:
-#P024, P036, P501, P509, P512, P525, P526, P535, P536 (9 in total)
-#Removing them from the ESM data:
-ESM <- ESM %>% filter(!Actual_ID %in% c("P003","P024", "P036", "P501", "P509", "P512", "P525", "P526", "P535", "P536"))
-
-unique(ESM$Actual_ID)
-
-unique(CBM_sub$ID)
-
-#P022 is in CBM sub - but was never there for ESM. Removing P022 from CBM_sub
-CBM_sub <- CBM_sub %>% filter(!ID %in% "P022")
-
-length(unique(ESM$Actual_ID))
-length(unique(CBM_sub$ID)) #The two dfs are now equal 
-
-
+# ESM <- read.csv("./data/ESM_reduced.csv")
+# ESM_keys <- read.csv("./data/ESM_keys.csv")
+# 
+# unique(ESM$Actual_ID) # P022 was never there from the beginning
+# 
+# ### Removing the excluded rows for low participation
+# 
+# #Are there still 2-s in the column?
+# ESM$Excluded.for.Low.Participation..1...no..2...yes. <-  as.factor(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+# is.factor(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+# unique(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+# 
+# # keeping an overview of what participants were removed - for matching with the CBM df
+# ESM_exluded_low_part <- filter(ESM, Excluded.for.Low.Participation..1...no..2...yes. == "2")
+# ESM_exluded_low_part_ID <- unique(ESM_exluded_low_part$Actual_ID) #The IDs removed are P010, P019, P020, P028, P038, P041, P049, P506, P513
+# 
+# #Removing from main df
+# ESM <- filter(ESM, Excluded.for.Low.Participation..1...no..2...yes. != "2")
+# unique(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+# 
+# length(unique(ESM$Actual_ID)) #There are 67 unique participants in this df
+# 
+# 
+# 
+# ##############################
+# #CBM data set
+# CBM <- read.csv("./data/preprocessed.csv")
+# CBM_vars <- read.csv("./data/CBM_variables.csv")
+# 
+# length(unique(CBM$ID)) #There are 79 unique IDs - 12 more than in the ESM data
+# 
+# #Replace weird column values with NA
+# CBM[CBM  == "#NULL!"] <- NA
+# 
+# 
+# #Selecting only the relevant columns in the CBM data for better overview
+# CBM_sub <- CBM %>% select(c(1:7), 
+#                           EEfRT_averaged_lowp, 
+#                           EEfRT_averaged_medp, 
+#                           EEfRT_averaged_highp,
+#                           EEfRT_LowProb_DiffScore,
+#                           EEfRT_MedProb_DiffScore,
+#                           EEfRT_HighProb_DiffScore,
+#                           POSCBMTrainingaccuracy,	
+#                           POSCBMTestingaccuracy,
+#                           NEGCBMTrainingaccuracy,
+#                           NEGCBMTestingaccuracy,
+#                           RT_POS_TRAINING_IDX,
+#                           RT_NEG_TRAINING_IDX,
+#                           RT_Diff_Score,
+#                           TEPS_ANT, TEPS_CON, MASQ_AA, MASQ_GD, MASQ_AD,  BAS_Drive, BAS_FS,BAS_RR, BIS)
+# 
+# CBM_sub$exclude <- NULL
+# CBM_sub$participant_id <- NULL
+# 
+# # 16 participants have NAs in their EEfRT columns - due to lacking EEfRT scores
+# 
+# #Removing the participants not included in the ESM df first to inspect what IDs are left
+# CBM_sub <- filter(CBM_sub, ID != "P010")
+# CBM_sub <- filter(CBM_sub, ID != "P019")
+# CBM_sub <- filter(CBM_sub, ID != "P020")
+# CBM_sub <- filter(CBM_sub, ID != "P028")
+# CBM_sub <- filter(CBM_sub, ID != "P038")
+# CBM_sub <- filter(CBM_sub, ID != "P041")
+# CBM_sub <- filter(CBM_sub, ID != "P049")
+# CBM_sub <- filter(CBM_sub, ID != "P506")
+# CBM_sub <- filter(CBM_sub, ID != "P513")
+# 
+# length(unique(CBM_sub$ID)) #Length is now 70, but 12 problematic participants are left. Only 4 of those removed were NA-participants
+# 
+# # Looking into the original df for these participants - what is the issue?
+# #The problematic IDs are: P003, P024, P036, P501, P509, P510, P512, P515, P525, P526, P535, P536
+# probID <- subset(CBM, ID %in% c("P003", "P024", "P036", "P501", "P509", "P510", "P512", "P515", "P525", "P526", "P535", "P536"))
+# 
+# 
+# #Further inspection shows that the problematic IDs are caused by NAs in the various prob categories of the EEfRT measurements - so incomplete CBM data. Removing all of them
+# CBM_sub <- CBM_sub %>% filter(!ID %in% c("P003", "P024", "P036", "P501", "P509", "P510","P512", "P515", "P525", "P526", "P535", "P536")) #The resulting df 
+# 
+# 
+# #Unique IDs in the subsetted CBM data
+# length(unique(CBM_sub$ID)) #The resulting df now has 58 unique participants. There were 67 in the ESM data. 
+# CBM_sub_unique_IDs <- unique(CBM_sub$ID)
+# 
+# #Looking at which IDS in the ESM df do not occur in the CBM df
+# unique(ESM$Actual_ID)
+# 
+# unique(CBM_sub$ID)
+# 
+# #The IDs that occur in the ESM data but not in the CBM data are:
+# #P024, P036, P501, P509, P512, P525, P526, P535, P536 (9 in total)
+# #Removing them from the ESM data:
+# ESM <- ESM %>% filter(!Actual_ID %in% c("P003","P024", "P036", "P501", "P509", "P512", "P525", "P526", "P535", "P536"))
+# 
+# unique(ESM$Actual_ID)
+# 
+# unique(CBM_sub$ID)
+# 
+# #P022 is in CBM sub - but was never there for ESM. Removing P022 from CBM_sub
+# CBM_sub <- CBM_sub %>% filter(!ID %in% "P022")
+# 
+# length(unique(ESM$Actual_ID))
+# length(unique(CBM_sub$ID)) #The two dfs are now equal 
+# 
+# 
 
 
 ##### Instead of all of the above, I guess an alternative option was to just merge the dfs, and write na.action "na-omit" in the model .....
@@ -144,25 +146,25 @@ length(unique(CBM_sub$ID)) #The two dfs are now equal
 
 
 ```{r}
-#The next task is to add three EEfRT columns to the ESM data frame, replicating their scores across each row every partipant has
-#Rename Actual_ID in ESM df to ID
-ESM <- ESM %>% rename(ID = Actual_ID)
-
-#Creating a merged column of subject and day
-ESM$subj_day <- paste(ESM$ID, ESM$Day)
-
-#Merging the two dfs
-ESM_merged <- merge(ESM, CBM_sub, all.x=TRUE, by="ID")
-ESM_merged <- as_tibble(ESM_merged)
-
-#reordering columns for better overview
-ESM_merged <- ESM_merged  %>% relocate(subj_day, .after=Day)
-ESM_merged <- ESM_merged  %>% relocate(Excluded.for.Low.Participation..1...no..2...yes., .after=BIS)
-ESM_merged <- ESM_merged  %>% relocate(StartDate, .after=Excluded.for.Low.Participation..1...no..2...yes.)
-ESM_merged <- ESM_merged  %>% relocate(Nationality, .after=StartDate)
-
-
-mergeddf <- write.csv(ESM_merged, "./data/ESM_CBM_merged")
+# #The next task is to add three EEfRT columns to the ESM data frame, replicating their scores across each row every partipant has
+# #Rename Actual_ID in ESM df to ID
+# ESM <- ESM %>% rename(ID = Actual_ID)
+# 
+# #Creating a merged column of subject and day
+# ESM$subj_day <- paste(ESM$ID, ESM$Day)
+# 
+# #Merging the two dfs
+# ESM_merged <- merge(ESM, CBM_sub, all.x=TRUE, by="ID")
+# ESM_merged <- as_tibble(ESM_merged)
+# 
+# #reordering columns for better overview
+# ESM_merged <- ESM_merged  %>% relocate(subj_day, .after=Day)
+# ESM_merged <- ESM_merged  %>% relocate(Excluded.for.Low.Participation..1...no..2...yes., .after=BIS)
+# ESM_merged <- ESM_merged  %>% relocate(StartDate, .after=Excluded.for.Low.Participation..1...no..2...yes.)
+# ESM_merged <- ESM_merged  %>% relocate(Nationality, .after=StartDate)
+# 
+# 
+# mergeddf <- write.csv(ESM_merged, "./data/ESM_CBM_merged")
 
 ```
 
@@ -184,6 +186,8 @@ Christine writes that the multilevel analysis should contain:
 
 # Inspecting the distributions of the data (once more :PPP)
 ```{r}
+ESM_merged <- read.csv("./data/ESM_CBM_merged")
+
 #Distribution of experienced and anticipated pleasure scores
 hist(ESM_merged$AntPleasure, col = 'coral2')
 hist(ESM_merged$ConPleasure, col = 'steelblue')
@@ -301,18 +305,20 @@ min(ESM_merged$EEfRT_averaged_highp) #0.03
 max(ESM_merged$EEfRT_averaged_highp) #0.1
 
 
+#Centering??
+# I do not think centering the predictors is necessary - there is a true meaningful 0 (our predictors are ratio variables)
+# #Centering predictors - tetsing the same models but with centered predictors
+# If scale = TRUE, then z-scores are computed
+ESM_merged$EEfRT_averaged_lowp_cen <- scale(ESM_merged$EEfRT_averaged_lowp, center = TRUE, scale = FALSE)
+ESM_merged$EEfRT_averaged_medp_cen <- scale(ESM_merged$EEfRT_averaged_medp, center = TRUE, scale = FALSE)
+ESM_merged$EEfRT_averaged_highp_cen <- scale(ESM_merged$EEfRT_averaged_highp, center = TRUE, scale = FALSE)
+
+#Testing cumulative link mixed models (haven't checked assumptions yet)
+
+
 ```
 
 #Modelling
-
-#Linear regression:
-For linear regression to work in this context, The outcome variable of daily life reward anticipation (ant_ or con_pleasure) must be in a continuous format. As of now, these variables are ordinal. The question is then if it makes sense to mean transform these scores. If not, it is worth considering a different modeling approach, such a cumulative link model (mixed effects logistic regression)
-
-- LinReg uses a linear equation to identify the line of best fit - and thereby enables prediction of the output of the dependent variable based on the independent ones. 
-- lInear regression describes a linear relationship between variables
-- In this study, the question is thus: how are lab measures of reward anticipation linearly related to real life measures of the same?
-- Linear regression requires a continuous outcome variable - our outcome variable is not continuous unless we transform it to be so
-- calculates coefficients/estimates best fitting regression line through ordinary least squares
 
 # Logistic regression 
 A logistic regression is used to classify/predict a categorical (usually binary) outcome  based on previous observations of a data set. Independent variables are used to predict the occurrence or failure of specific events. Standard Logistic regression’s output lies between 0 and 1.
@@ -325,125 +331,166 @@ A logistic regression is used to classify/predict a categorical (usually binary)
 The fact that I am asked to answer whether the lab measures of reward anticipation can predict the ESM measures of reward anticipation seems kind of strange, when really the power point seems to suggest that the question of interest really regards wether or not the two are associated with each other. 
 
 
-Cumulative link model
-This is a logistic regression model - and the task is becoming a classification task rather than a prediction task. 
+## Cumulative link mixed model (CLMMs)
+- This is a logistic regression model - and the task is becoming a classification task rather than a prediction task. 
+- The CLMM allows for analysing ordinal response variables while taking use of random effects as well
+- These models are also known as ordered regression models, and proportional odds models
+- Estimation is done via maximum likelihood
+- Models are fitted with the Laplace approximation and adaptive Gauss.Hermite quadrature
+- we're working with cumulative probabilities
+- Cumulative probability (or odss, depending on specifications) of falling within or below any of the certain crdered categories in our outcome variable
+
+Goal:
+- Determine the realtionship between an ordered factor dependent variable and a set of predictors
+- Ideal for analysing Likert-scale data
+
+ 
+#Regarding scaling variables
+I don't think scaling the predictors would be necessary, considering that all three predictors contain the same  format of information. There is a clear meaning of 0 in our case (for the predictors that is) - 0 is a complete absence of hard tasks for the given probbability
+
+#LaPlace approximation
+Laplace's approximation provides an analytical expression for a posterior probability distribution by fitting a Gaussian distribution with a mean equal to the MAP solution and a variance equal to the observed Fisher information.
+
 ```{r}
-# I do not think centering the predictors is necessary - there is a true meaningful 0 (our predictors are ratio variables)
 
-#simply fitting the models to see what we've got 
-# No centering, no residual checks, and treating the outcome as continuous (not doing an ordinal regression)
-
-test_ant_pl <- lmer(AntPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|subj_day) + (1|ID), data = ESM_merged, REML = FALSE, na.action = "na.omit")
+#Making sure the outcome variable are ordered factors
+ESM_merged$ConPleasure <- factor(ESM_merged$ConPleasure, ordered = TRUE)
+ESM_merged$AntPleasure <- factor(ESM_merged$AntPleasure, ordered = TRUE)
 
 
-?lmer
+#Fitting null models
+#Null syntax
+ant_null <- clmm(AntPleasure ~ 1 + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = 'logit')
+summary(ant_null)
 
-test_con_pl <- lmer(ConPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|subj_day) + (1|ID),  
-                        data = ESM_merged, REML = FALSE, na.action = "na.omit")
+con_null <- clmm(ConPleasure ~ 1 + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = 'logit')
+summary(con_null)
 
-summary(test_ant_pl)
-summary(test_con_pl)
+#Fitting the "full" intended models
+#Random intercept models
+antmod <- clmm(AntPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = 'logit') #logit link gives us the proportional odds mixed model
 
+summary(antmod)
 
-
-#Cannot use linear regression since our outcome measure really isn't continuous
-#Should rather do ordinal logistic regression
-
-
-
-#Centering predictors - tetsing the same models but with centered predictors
-ESM_merged$EEfRT_averaged_lowp_cen <- scale(ESM_merged$EEfRT_averaged_lowp, center = TRUE, scale = FALSE)
-ESM_merged$EEfRT_averaged_medp_cen <- scale(ESM_merged$EEfRT_averaged_medp, center = TRUE, scale = FALSE)
-ESM_merged$EEfRT_averaged_highp_cen <- scale(ESM_merged$EEfRT_averaged_highp, center = TRUE, scale = FALSE)
-
-test_ant_cen <- lmer(AntPleasure ~ EEfRT_averaged_lowp_cen + EEfRT_averaged_medp_cen + EEfRT_averaged_highp_cen + (1|subj_day) + (1|ID), data = ESM_merged, REML = FALSE, na.action = "na.omit")
+conmod <- clmm(ConPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = 'logit')
 
 
-test_con_cen <- lmer(ConPleasure ~ EEfRT_averaged_lowp_cen + EEfRT_averaged_medp_cen + EEfRT_averaged_highp_cen + (1|subj_day) + (1|ID), data = ESM_merged, REML = FALSE, na.action = "na.omit")
+summary(conmod)
+conmod
+#Random slopes models
+
+#Fitting the model
 
 
-summary(test_ant_cen)
-summary(test_con_cen)
-summary(test_con_pl)
 
 
-#Testing cumulative link mixed models (haven't checked assumptions yet)
 
 
-# plot distributions
-d %>% 
-  gather(Variable, val, c("x", "x.c")) %>%
-  ggplot(aes(x = val, group = Variable, fill = Variable)) + 
-  geom_density(alpha = .4) + 
-  labs(x = "Variable X" , y = "Count") +
-  geom_vline(xintercept = mean(d$x),
-             linetype = "dashed") +
-  geom_vline(xintercept = mean(d$x.c),
-             linetype = "dashed") +
-  xlim(-1.5, 4) +
-  labs(x = "" , y = "Count") +
-  theme_classic()
+#Questions to ask:
+# How much variance is explained by the random predictors?
+# The primary result is the coefficient table with parameter estimates
 
+#Intuition between interpretation of the clmm() output. Positive coefficients indicate that higher averaged proportions of hard tasks in the given probability category is associated with higher ratings of the outcome measures
 ```
 
-#Assumptions of linear regression
-The assumptions, for a linear mixed effects model,
-• The explanatory variables are related linearly to the response.
-• The residuals have constant variance (homogeneity of variance)
-• The residuals are Normally distributed.
-• The residuals are independent.
+# Testing model assumptions following model fit
+The assumptions of ordered logistic regression must be assessed to ensure the models fitted are indeed valid. 
+The assumptions should be tested in the following order:
 
+1. The dependent variable is ordered
+2. One or more of the independent variables are either continuous, categorical or ordinal.
+3. No multicollinearity between the independent variables
+4. Proportional odds
+
+
+
+Comment on multicollinearity:
+Multicollinearity exists whenever an independent variable is highly correlated with one or more of the other independent variables in a multiple regression equation. Multicollinearity is a problem because it undermines the statistical significance of an independent variable. Other things being equal, the larger the standard error of a regression coefficient, the less likely it is that this coefficient will be statistically significant.
+
+Comment on proportional odds
+- This assumption means that the relationship between each pair of outcome groups has to be the same. 
+- If the relationship between all pairs of groups is the same, then there is only one set of coefficient, which means that there is only one model.
+- If this assumption is violated, different models are needed to describe the relationship between each pair of outcome groups.
+
+
+# 1. The dependent variable is ordered
+This assumption is fulfilled - Likert-scale data is our outcome variable. 
+
+# 2. One or more of the predictors are either continuous, categorical, or ordinal
+- We're dealing with ratio scale variables. These are considered continuous within their limitation.
+- maybe double check this with Christine. Otherwise, consider scaling the predictors
+
+
+# 3. No multicollinearity between the independent variables
 ```{r}
+# pacman::p_load("GGally")
 
-#Linearity between predictors and outcome variable
-#This can be checked by plotting the residuals against the response and looking for any systematic shape, and by including non-linear terms (or splines) and comparing the model fit.
+#Create numeric outcome columns
+ESM_merged$con_num <- as.numeric(ESM_merged$ConPleasure)
+ESM_merged$ant_num <- as.numeric(ESM_merged$AntPleasure)
 
-
-#Testing assumptions
-#Normal residuals
-## extract residuals:
-res_ant <- residuals(test_ant_pl)
-qqnorm(res_ant)
-abline(0,1)
-hist(res_ant)
-
-
-res_con <- residuals(test_con_pl)
-qqnorm(res_ant)
-abline(0,1)
-hist(res_con)
-
-
-# So far, residuals don't look normal. Might have to transform data (still considering using a different model)
-
-
-
-# 2. homogeneity of variance (violated - there is a clear pattern)
-# The residuals have constant variance. This can be checked with a plot of residuals against fitted values - there should be no pattern/trend.
-plot(fitted(test_ant_pl), res_ant)
-abline(0,0) #add a horizontal line at 0 
-
-
-#3. Normally distributed residuals
-#This can be checked in many ways, such as a Q-Q plot and a simple histogram. Statistical tests, such as Anderson-Darling and Kolmogorov–Smirnov are also possible.
-
-#4. Independent residuals
-#This can be checked by plotting residuals against covariates - especially time-varying or spatial covariates. There should not be any systematic pattern
-
-
-
-
-
-
+# correlation plot - Testing collinearity
+EEfRT_avs <- ESM_merged[, c(11:13)]
+ggpairs(EEfRT_avs, title = "Correlation Plot between each predictor Variable")
+# No correlation coefficients above 0.8, so there is reason to think there is no multicollinearity. 
 
 
 ```
 
+# 4. Proportional Odds
+Brant test can be used to test this assumption
 
-#Testing out ordinal linear regression
+- The assumption is not violated if the p-values for Brant's test are above .05. 
+
+
 ```{r}
+# testing parallel regression assumption using Brant's test
+#brant(model)
 
+#Assumption that the effect of each independent variable is the same for each change point in the dependent variable
+#The odds of the change from each point on the Likert scale as an effect of the predictors should be proportional
+#We can do the brant test, and we hope for it to be non-significant, since the null hypothesis is parallell lines
+
+pacman::p_load("brant")
+brant(antmod) #none of the p-values are significant, and this the assumption holds
+
+ESM_merged$ID <- as.numeric(ESM_merged$ID, na.action(na.omit))
+ESM_merged$ <- as.numeric(ESM_merged$ID, na.action(na.omit))
+class(ESM_merged$ID)
 ```
+
+
+
+#Interpreting the model output
+https://marissabarlaz.github.io/portfolio/ols/ 
+
+Firstly: Difference between probability and odds
+- Probabilities are considered proportions or percentages, defined by dividing the occurrences of an event divided by the total number of observations. 
+- Odds are the ratio of the probability of one event to the probability of another event, which can be simplified as the ratio of the frequency of X to the frequency of Y.
+
+
+If the odds equal 1, the probabilities of the outcomes are equal. If the odds are lower than 1, the probability of the second event is greater than the first (aka, if m/p < 1, then P is more likely than M). If odds is higher than 1, the probability of the first event is greater than the second event (if m/p > 1, then M more likely than P).
+
+Log odds are logarithmically transformed odds.
+
+An odds ratio is the ratio of two odds. It tells you if the odds for a particular event is more or less likely in a particular scenario over another.
+
+A log odds ratio is the log of the odds ratio. If a log odds ratio is positive, the specified level boosts the chances of a selected outcome. If a log odds ratio is negative, the specified level decreases the chances of a selected outcome. Log odds are centered around 0 (because ln(1) = 0, so when odds are equal, ln(odds) = 0.
+
+In order to convert from log odds ratios to odds ratios, use exp(X). To convert from log odds ratios to probabilities, use the following formula: probability = exp(X)/(1 + exp(X)). You can also use the plogis() function to do this conversion.
+
+
+
+
+
+#Linear regression:
+For linear regression to work in this context, The outcome variable of daily life reward anticipation (ant_ or con_pleasure) must be in a continuous format. As of now, these variables are ordinal. The question is then if it makes sense to mean transform these scores. If not, it is worth considering a different modeling approach, such a cumulative link model (mixed effects logistic regression)
+
+- LinReg uses a linear equation to identify the line of best fit - and thereby enables prediction of the output of the dependent variable based on the independent ones. 
+- lInear regression describes a linear relationship between variables
+- In this study, the question is thus: how are lab measures of reward anticipation linearly related to real life measures of the same?
+- Linear regression requires a continuous outcome variable - our outcome variable is not continuous unless we transform it to be so
+- calculates coefficients/estimates best fitting regression line through ordinary least squares
 
 
 
