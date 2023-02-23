@@ -1,0 +1,135 @@
+---
+title: "task3_models"
+author: "Liv Tollånes"
+date: "2023-02-23"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Loading packages
+#Loading packages 
+
+pacman::p_load("tidyverse", "ggpubr","dplyr")
+```
+
+```{r}
+#Loading ESM data
+
+ESM <- read.csv("./data/ESM_reduced.csv")
+ESM_keys <- read.csv("./data/ESM_keys.csv")
+
+#unique(ESM$Actual_ID) # P022 was never there from the beginning
+
+### Removing the excluded rows for low participation
+
+#Are there still 2-s in the column?
+ESM$Excluded.for.Low.Participation..1...no..2...yes. <-  as.factor(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+is.factor(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+unique(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+
+# keeping an overview of what participants were removed - for matching with the CBM df
+ESM_exluded_low_part <- filter(ESM, Excluded.for.Low.Participation..1...no..2...yes. == "2")
+ESM_exluded_low_part_ID <- unique(ESM_exluded_low_part$Actual_ID) #The IDs removed are P010, P019, P020, P028, P038, P041, P049, P506, P513
+
+#Now Removing them from main df
+ESM <- filter(ESM, Excluded.for.Low.Participation..1...no..2...yes. != "2")
+unique(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
+
+length(unique(ESM$Actual_ID)) #There are 67 unique participants in this df
+
+#Selecting only the columns relevant for this analysis (Actual_ID, Day, PA, NA.)
+
+ESM_3 <- ESM %>% dplyr::select(c(1:2), PA, NA.)
+
+#Rename Actual_ID in ESM df to ID
+ESM_3 <- ESM_3 %>% rename(ID = Actual_ID)
+
+
+
+
+```
+
+```{r}
+# Loading CBM data
+CBM <- read.csv("./data/preprocessed.csv")
+CBM_vars <- read.csv("./data/CBM_variables.csv")
+
+
+length(unique(CBM$ID)) #There are 79 unique IDs - 12 more than in the ESM data
+
+#Replace weird column values with NA
+CBM[CBM  == "#NULL!"] <- NA
+
+#Selecting only the relevant columns in the CBM data for better overview
+CBM_3 <- CBM %>% dplyr::select(ID,RT_Diff_Score)
+
+#Remove in the CBM df those removed in the ESM data due to low participation
+# these were P010, P019, P020, P028, P038, P041, P049, P506, P513
+CBM_3 <- filter(CBM_3, ID != "P010")
+CBM_3 <- filter(CBM_3, ID != "P019")
+CBM_3 <- filter(CBM_3, ID != "P020")
+CBM_3 <- filter(CBM_3, ID != "P028")
+CBM_3 <- filter(CBM_3, ID != "P038")
+CBM_3 <- filter(CBM_3, ID != "P041")
+CBM_3 <- filter(CBM_3, ID != "P049")
+CBM_3 <- filter(CBM_3, ID != "P506")
+CBM_3 <- filter(CBM_3, ID != "P513")
+
+
+length(unique(CBM_3$ID))
+length(unique(ESM_3$ID)) #There are 3 less participants in the ESM data now
+
+uniqueCBM <- unique(CBM_3$ID)
+uniqueESM <- unique(ESM_3$ID)
+
+#What IDs do not occur in the ESM data? Remove these from the CBM data
+uniqueCBM
+uniqueESM #P022, P510, P515 do not exist in the ESM data. Remove them
+
+CBM_3 <- filter(CBM_3, ID != "P022")
+CBM_3 <- filter(CBM_3, ID != "P510")
+CBM_3 <- filter(CBM_3, ID != "P515")
+
+length(unique(CBM_3$ID))
+length(unique(ESM_3$ID)) #Now, they are the same length. Merge them for further work
+
+df_task3 <- merge(CBM_3, ESM_3, all.x=TRUE, by="ID")
+df_task3 <- df_task3  %>% relocate(Day, .after=ID)
+
+# A strange value appears for participant P503 on day 2. Set this value to NA - and then omit NAs
+df_task3[df_task3 == "#DIV/0!"] <- NA
+
+#Creating a merged column of subject and day
+df_task3$subj_day <- paste(df_task3$ID, df_task3$Day)
+
+any(is.na(df_task3)) #contains NAs - keeping them so far
+df_task3[!complete.cases(df_task3), ]
+```
+
+#Create SD scores for positive and negative emotions and replicate per day 
+```{r}
+
+# Create SD and duplicate for all rows on multiple columns
+
+SD_pos <- df_task3 %>%
+  dplyr::group_by(subj_day) %>%
+  summarise(SD_PA = sd(PA))
+
+
+SD_neg <- df_task3 %>%
+  dplyr::group_by(subj_day) %>%
+  summarise(SD_NA = sd(NA.))
+
+df_task3 <- merge(df_task3, SD_pos, all.x=TRUE, by="subj_day")
+df_task3 <- merge(df_task3, SD_neg, all.x=TRUE, by="subj_day")
+
+# We actually only need one row per participant for the analysis, since we're using variables with only one measurement per ID
+# Select subj_day,ID, Day,RT_Diff_Score, SD_PA, and SD_NA - with only one row per participant 
+
+
+```
+

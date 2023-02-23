@@ -169,7 +169,7 @@ pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "
 
 ```
 
-## Actual modelling
+
 
 Variable types:
 - Outcome/dependent variables (ant/con. pleasure) are ordinal (measured on 7 pt. Likert scale)
