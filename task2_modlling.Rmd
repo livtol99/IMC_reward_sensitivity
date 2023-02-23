@@ -24,10 +24,11 @@ Q: Does lab-measured reward anticipation (averaged EEfRT scores) predict self-re
 ```{r}
 #Loading packages 
 
-pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "nlme", "lme4", "lmerTest", "JWileymisc","multilevelTools", "texreg", "ordinal", "GGally")
+pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "nlme", "lme4", "lmerTest", "JWileymisc","multilevelTools", "texreg", "ordinal", "GGally", "rcompanion", "brant")
 
-#The ordinal package allows for creating regression models for ordinal data
-
+#ordinal: creating regression models for ordinal data
+#rcompanion: test R squared
+# brant: test for proportional odds
 
 ```
 
@@ -316,6 +317,7 @@ ESM_merged$EEfRT_averaged_highp_cen <- scale(ESM_merged$EEfRT_averaged_highp, ce
 #Testing cumulative link mixed models (haven't checked assumptions yet)
 
 
+
 ```
 
 #Modelling
@@ -357,33 +359,34 @@ Laplace's approximation provides an analytical expression for a posterior probab
 ESM_merged$ConPleasure <- factor(ESM_merged$ConPleasure, ordered = TRUE)
 ESM_merged$AntPleasure <- factor(ESM_merged$AntPleasure, ordered = TRUE)
 
-
-#Fitting null models
-#Null syntax
-ant_null <- clmm(AntPleasure ~ 1 + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = 'logit')
-summary(ant_null)
+########################## Null models #################
+#Fitting the null models
+ant_null <- clmm(AntPleasure ~ 1 + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = "logit")
 
 con_null <- clmm(ConPleasure ~ 1 + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = 'logit')
-summary(con_null)
 
-#Fitting the "full" intended models
+
+################### full models ###########
+
 #Random intercept models
-antmod <- clmm(AntPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = 'logit') #logit link gives us the proportional odds mixed model
+antmod1 <- clmm(AntPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = 'logit') #logit link gives us the proportional odds mixed model
 
-summary(antmod)
-
-conmod <- clmm(ConPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = 'logit')
+conmod1 <- clmm(ConPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp + (1|ID) + (1|subj_day), data = ESM_merged, na.action = "na.omit", Hess = TRUE, link = 'logit')
 
 
-summary(conmod)
-conmod
-#Random slopes models
+# Comparing against the null
+anova(ant_null, antmod) # the full model does not seem to be much better, no significant difference
+anova(con_null, conmod) # the full model does not seem to be much better, no significant difference
 
-#Fitting the model
+#getting the pseudo r squared
+#nagelkerke(fit = antmod1, null = ant_null)
+ 
+summary(antmod1)
+summary(conmod1)
 
-
-
-
+#Confidence intervals
+confint(antmod1) #Both models include 0 in the confidence intervals
+confint(conmod1)
 
 
 #Questions to ask:
@@ -392,6 +395,42 @@ conmod
 
 #Intuition between interpretation of the clmm() output. Positive coefficients indicate that higher averaged proportions of hard tasks in the given probability category is associated with higher ratings of the outcome measures
 ```
+
+
+#Interpreting the model outputs
+
+#Result 
+## There does not seem to be any significant associations between our predictors (ratio of hard tasks chosen in the three probability conditions) and reward/pleasure anticipation, nor between the predictors and experienced rewards/pleasure (at p>.05). 
+
+- Ordinal regression outputs indicate the likelihood/odds/proportional odds (depending on the link function applied) of moving from one category to the next at any level in the ordinal structure of the dependent variable (this is why the assumpyion of parallel lines is so important). From lower to higher. 
+
+- There are pretty large standard errors for all estimates - large uncertainty
+We can exponentiate the model outputs to get odds ratios
+
+
+
+#Trends
+Anticipated pleasure (disregarding bad model fit and insignificance):
+Low p: The positive estimate indicates that, as the proportion of hard tasks chosen for low probability goes up, people are more likely to have higher self reported anticipation of pleasure
+
+Medium and high p: negative association means that as the proportion of hard tasks chosen increases, people are less likely to report higher anticipated pleasure. (Counterintuitive according to our assumptions. We would assume a positive relationship between choosing harder tasks and reporting higher levels of anticipation)
+
+Experienced pleasure (disregarding bad model fit and insignificance):
+
+
+#Model fit:
+- There are large standard deviations in the estimates
+- Confidence intervals all include 0 for the coefficients of both models (no sifgnificance)
+- No difference between the null and the full model (random intercept model)
+- Assumptions of parrallel lines violated for both models (the effects of the predictors on the ordinal outcome are not the same for each change point in the dependent variable), expect for EEfRT_lowp on the anticipated pleasure
+
+- There seems to be quite some group level variance for ID in both models. Less for days within subjects. (spread in population distribution)
+- - Standard errors are also quite wide for all fixed predictors in both, but lowest for "lowp" in both models (sample variation from true population mean)
+
+
+
+
+
 
 # Testing model assumptions following model fit
 The assumptions of ordered logistic regression must be assessed to ensure the models fitted are indeed valid. 
@@ -409,19 +448,20 @@ Multicollinearity exists whenever an independent variable is highly correlated w
 
 Comment on proportional odds
 - This assumption means that the relationship between each pair of outcome groups has to be the same. 
+- We want to test the assumption that the effect of each intependent variable is the same for each change point in the dependent variable. So the effect of EEfRT_low_p on going from 1 to 2 on the likert scale should be the same as the effect of that variable on going from 2 to 3 etc. 
 - If the relationship between all pairs of groups is the same, then there is only one set of coefficient, which means that there is only one model.
 - If this assumption is violated, different models are needed to describe the relationship between each pair of outcome groups.
 
 
-# 1. The dependent variable is ordered
+# 1. The dependent variable is ordered (satisfied)
 This assumption is fulfilled - Likert-scale data is our outcome variable. 
 
-# 2. One or more of the predictors are either continuous, categorical, or ordinal
+# 2. One or more of the predictors are either continuous, categorical, or ordinal (satosfied)
 - We're dealing with ratio scale variables. These are considered continuous within their limitation.
 - maybe double check this with Christine. Otherwise, consider scaling the predictors
 
 
-# 3. No multicollinearity between the independent variables
+# 3. No multicollinearity between the independent variables (saitisfied)
 ```{r}
 # pacman::p_load("GGally")
 
@@ -437,26 +477,42 @@ ggpairs(EEfRT_avs, title = "Correlation Plot between each predictor Variable")
 
 ```
 
-# 4. Proportional Odds
+# 4. Proportional Odds (not satisfied ?? )
 Brant test can be used to test this assumption
 
 - The assumption is not violated if the p-values for Brant's test are above .05. 
+- So we want the brant test to be non-significant
 
+- we do the test for the entire model, as well as for each independent variable
+
+
+Findings:
+
+The assumption of proportional odds is not satisfied  according to the brant test for all predictors byt the low probability category (anticipated pleasure)
+
+For experienced pleasure - none of the predictors satisfies the assumption. As such, this model is likely not very good - something is off with its specification. 
 
 ```{r}
-# testing parallel regression assumption using Brant's test
-#brant(model)
+# We can't do the brant test on the clmm model - we must use the polr() from MASS 
+library("MASS")
 
-#Assumption that the effect of each independent variable is the same for each change point in the dependent variable
-#The odds of the change from each point on the Likert scale as an effect of the predictors should be proportional
-#We can do the brant test, and we hope for it to be non-significant, since the null hypothesis is parallell lines
+#Polr does not take the random effects - I found a source stating that they did not matter for the proportional odds assumption, and so a simple polr could be fitted (no random effects) for the brant test. However - not sure :////
 
-pacman::p_load("brant")
-brant(antmod) #none of the p-values are significant, and this the assumption holds
+ant_polr <- polr(AntPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp, data = ESM_merged, na.action = "na.omit", Hess = TRUE) 
 
-ESM_merged$ID <- as.numeric(ESM_merged$ID, na.action(na.omit))
-ESM_merged$ <- as.numeric(ESM_merged$ID, na.action(na.omit))
-class(ESM_merged$ID)
+brant(ant_polr)
+
+
+  con_polr <- polr(ConPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp, data = ESM_merged, na.action = "na.omit", Hess = TRUE)
+
+brant(con_polr)
+
+
+
+# The assumption of proportional odds is not satisfied  according to the brant test for all predictors byt the low probability category (anticipated pleasure)
+
+# For experienced pleasure - none of the predictors satisfies the assumption 
+
 ```
 
 
@@ -480,17 +536,6 @@ A log odds ratio is the log of the odds ratio. If a log odds ratio is positive, 
 In order to convert from log odds ratios to odds ratios, use exp(X). To convert from log odds ratios to probabilities, use the following formula: probability = exp(X)/(1 + exp(X)). You can also use the plogis() function to do this conversion.
 
 
-
-
-
-#Linear regression:
-For linear regression to work in this context, The outcome variable of daily life reward anticipation (ant_ or con_pleasure) must be in a continuous format. As of now, these variables are ordinal. The question is then if it makes sense to mean transform these scores. If not, it is worth considering a different modeling approach, such a cumulative link model (mixed effects logistic regression)
-
-- LinReg uses a linear equation to identify the line of best fit - and thereby enables prediction of the output of the dependent variable based on the independent ones. 
-- lInear regression describes a linear relationship between variables
-- In this study, the question is thus: how are lab measures of reward anticipation linearly related to real life measures of the same?
-- Linear regression requires a continuous outcome variable - our outcome variable is not continuous unless we transform it to be so
-- calculates coefficients/estimates best fitting regression line through ordinary least squares
 
 
 
