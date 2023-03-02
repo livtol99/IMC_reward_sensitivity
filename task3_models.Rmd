@@ -13,7 +13,7 @@ knitr::opts_chunk$set(echo = TRUE)
 #Loading packages
 #Loading packages 
 
-pacman::p_load("tidyverse", "ggpubr","dplyr")
+pacman::p_load("tidyverse", "ggpubr","dplyr", "lme4", "lmerTest", "nlme")
 ```
 
 ```{r}
@@ -130,6 +130,232 @@ df_task3 <- merge(df_task3, SD_neg, all.x=TRUE, by="subj_day")
 # We actually only need one row per participant for the analysis, since we're using variables with only one measurement per ID
 # Select subj_day,ID, Day,RT_Diff_Score, SD_PA, and SD_NA - with only one row per participant 
 
+df3_modelling <- df_task3 %>% select(c(1:2), RT_Diff_Score, SD_PA, SD_NA, Day)
+
+#Removing duplicate rows
+df3_modelling  <- df3_modelling [!duplicated(df3_modelling ), ]
+
+#Do any of the IDs now contain more rows?
+which(duplicated(df3_modelling$subj_day)) #Now, we have no duplicated rows for subj_day. (Thus, all individuals have only one row per day)
+
+# The resulting df contains quite some NAs. This is a result of an inability to calculate deviation scores per day due the fact that some participants only have one NA and PA score for certain days
+
+#The NAs will simply be ignored in the modelling, but it might be a sign that daily variation in affect scores is not a good separation of the data to use as predictors in the modelling process
 
 ```
+
+#Modelling - daily positive and negative emotion lability
+
+Note to Christine:
+The question I'm asked to investigate is whether people's adaptability to cognitive bias predict their daily variation in positive and negative affect. - I am just thinking that maybe we should ask the question the other way around? Is it not mpre plausible to assume daily mood variations (an effect of the current condition a person suffers from) will affect their general CBM adaptability? 
+
+
+
+# What variables do I have?
+For both models, the outcome (SD-scores) are continuous. Therefore --> linear mixed models. 
+
+
+#Linear regression:
+- LinReg uses a linear equation to identify the line of best fit - and thereby enables prediction of the output of the dependent variable based on the independent ones. 
+- Describes a linear relationship between variables
+- Here, how is CBM adaptability linearly related to daily mood variations?
+- Calculates coefficients/estimates best fitting regression line through ordinary least squares
+
+
+#RENL or not?
+REML takes account of the number of (fixed effects) parameters estimated, losing 1 degree of freedom for each. 
+
+ML method underestimates the variance parameters because it assumes that the fixed parameters are known without uncertainty when estimating the variance parameters.
+
+The REML method uses a mathematical trick to make the estimates for the variance parameters independent of the estimates for the fixed effects. REML works by first getting regression residuals for the observations modeled by the fixed effects portion of the model, ignoring at this point any variance components.
+
+ML estimates are unbiased for the fixed effects but biased for the random effects, whereas the REML estimates are biased for the fixed effects and unbiased for the random effects.
+
+#Fitting the models
+```{r}
+#Doesn't work - see notes under "issue" below
+# mpos <- lmer(SD_PA ~ RT_Diff_Score + (1|subj_day), data = df3_modelling, REML = T,# Restricted maximum likelihood, small sample size 
+#              na.action = "na.omit")
+
+#Remove Nas before modelling to perform model comparison
+df3_modelling <- na.omit(df3_modelling)
+
+
+#Positive affect
+mpos0 <- lmer(SD_PA ~ 1 + (1|ID) + (1|Day), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+             na.action = "na.omit")
+
+mpos02 <- lmer(SD_PA ~ 1 + (1|ID), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+             na.action = "na.omit")
+
+mpos <- lmer(SD_PA ~ RT_Diff_Score + (1|ID), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+             na.action = "na.omit") #bad model because we assume that Day in general should have its own effect on the outcome. If included, we should nest ID within day 
+
+
+anova(mpos0, mpos) #no difference 
+
+ranef(mpos_alternative)
+
+
+#Negative affect
+# mneg <- lmer(SD_NA ~ RT_Diff_Score + (1|ID) + (1|Day), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+#              na.action = "na.omit") This model overfits the data. Consider making a less complex model
+
+mneg0 <- lmer(SD_NA ~ 1 + (1|ID) + (1|Day), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+             na.action = "na.omit")
+
+mneg02 <- lmer(SD_NA ~ 1 + (1|ID), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+             na.action = "na.omit")
+
+
+
+
+mneg <- lmer(SD_NA ~ RT_Diff_Score + (1|ID), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+             na.action = "na.omit")
+
+mneg2 <- lmer(SD_NA ~ RT_Diff_Score + (1|Day), data = df3_modelling, REML = T, na.action = "na.omit") #Using day as a random effects leads to overfitting
+
+summary(mpneg)
+anova(mneg0, mneg02)
+anova(mneg, mneg0)
+#anova(mneg, mneg2)
+
+
+
+
+
+summary(mneg) 
+
+
+
+```
+#Issue
+- I understand it so that I am asked to use subj_day as random intercepts for this task. WWith the current data structure, I have one observation per unique subj_day value. The model attempts to estimate residual variance and among-subj_day variance - thus essentially trying to estimate the same variance component. 
+
+- This is a nested design, so maybe it makes more sense to create an aggregated data structure? Average variation over the course of the week per participant?
+- Or else, I've simply attempted to fit the suggested model with random effects for each individual and each day
+
+- I have tried, but cannot seem to add the nesting of days within participants without overfitting 
+
+- Coming back to my question of whether the modelling should be done the other way around: the independent variable of RT_diff_scores do not differ with days. It is the mood scores that differ with days, making it more feasible to reverse the way the question is asked
+
+- I find this complex to model correctly, as we are working with within-day-variation for each participan. They are already nested within days - but I am not allowed to use subj_day
+
+- there might be an issue in trying to predict more values out from one (SD ~ diff)
+
+
+#Asking the question the other way around
+
+Q: Does daily variation in mood linearly related to CBM adaptability?
+```{r}
+
+# Positive emotions' effect on BCM adaptability
+
+mpos <- lmer(RT_Diff_Score ~ SD_PA + (1|ID), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+             na.action = "na.omit") #b
+
+
+#Evt prøv med feature engineering (bruke min, max, med etc som predictors)
+
+lmer(SD_PA ~ 1 + (1|ID), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+             na.action = "na.omit")
+
+
+```
+
+```{r}
+# Mean centering the variables before fitting
+
+cleaned_metricwire$rpaef_gm <- scale(cleaned_metricwire$rpaef_uncentered, scale = FALSE)
+
+df3_modelling$RT_Diff_Score_cen <- scale(df3_modelling$RT_Diff_Score)
+df3_modelling$SD_PA_cen <- scale(df3_modelling$SD_PA)
+df3_modelling$SD_NA_cen <- scale(df3_modelling$SD_NA)
+
+
+lmer(RT_Diff_Score_cen ~ SD_PA_cen + (1|ID), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+             na.action = "na.omit")
+
+
+
+
+#When mean centered, I can add day as well, but it makes no difference in terms of significance levels
+mod <- lmer(SD_PA_cen ~ RT_Diff_Score_cen + (1|ID) + (1|Day), data = df3_modelling, REML = T, # Restricted maximum likelihood, small sample size 
+             na.action = "na.omit")
+
+summary(mod)
+```
+
+#Sanity checks - is there anay relation between the variables at all?
+
+```{r}
+
+# Variation in affect across days
+ggplot(df3_modelling, aes(Day, SD_NA)) + 
+  geom_point(color='blue') +
+  geom_smooth(method = "lm", colour = 'red') + ggtitle("Relation between variation in negative affect and days")
+
+ggplot(df3_modelling, aes(Day, SD_PA)) + 
+  geom_point(color='blue') +
+  geom_smooth(method = "lm", colour = 'red') + ggtitle("Relation between variation in positive affect and days")
+
+
+
+
+#Negative emotion lability and CBM adaptability
+ggplot(df3_modelling, aes(RT_Diff_Score, SD_PA)) + 
+  geom_point(color='blue') +
+  geom_smooth(method = "lm", colour = 'red') + ggtitle("Relation between positive emotion lability and CBM adaptability")
+
+
+
+ggplot(df3_modelling, aes(RT_Diff_Score, SD_NA)) + 
+  geom_point(color='blue') +
+  geom_smooth(method = "lm", colour = 'red') + ggtitle("Relation between negative emotion lability and CBM adaptability")
+
+
+
+
+#Relationship between the two outcome variables - Are they correlated? (Colour by ID or Day)
+ggplot(df3_modelling, aes(x=RT_Diff_Score, y=SD_NA, colour = ID)) + geom_point() + geom_jitter() # does not seem to be any relation
+
+ggplot(df3_modelling, aes(x=RT_Diff_Score, y=SD_PA, colour = ID)) + geom_point() + geom_jitter() 
+
+```
+
+
+# Concluding remarks so far
+- It does not look like the suggested model is a good way to assess the relationship between individual mood fluctuations and Rec_test poerformance. 
+- We only have a few data points per day, making it difficult to add the random effects as suggested
+
+
+
+
+# Option
+- aggretating across the entire week per participant 
+
+# Linreg assumptions
+The assumptions, for a linear mixed effects model,
+• The explanatory variables are related linearly to the response.
+• The errors have constant variance.
+• The errors are independent.
+• The errors are Normally distributed.
+
+```{r}
+#examine random effects
+ranef(mpos)
+```
+
+
+
+
+
+#Modelling - daily negative emotion lability
+```{r}
+
+```
+
+
+
+
 
