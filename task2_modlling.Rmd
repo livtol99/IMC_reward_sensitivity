@@ -14,13 +14,6 @@ knitr::opts_chunk$set(echo = TRUE)
 Q: Does lab-measured reward anticipation (averaged EEfRT scores) predict self-reported (i) "anticipated reward pleasure" (ii) "experienced reward" in the real world (ESM)? 
 
 
-	- Use the averaged EEfRT scores created in task 1. (Scores from the 2 days(pos and neg) merged together, but with 3 levels, low, med, high probability)
-	
-	- Use multilevel modelling, with 3 levels of nested data (questionnaires, nested within days, within participants)
-	
-	- The analysis would be very close to the paper: https://psyarxiv.com/fnhd9/, but with EEfRT performance as the participant-level predictors (low, med, high) instead of the ISI, RPA scores, and ERQ scores. The EEfRT are obviously not day-level predictors, but more like our covariates baseline, ISI  - instead of baseline participant-level ISI scores, RPA scores, and ERQ scores). "Participant" and "Days within participant" are random intercepts.
-
-
 ```{r}
 #Loading packages 
 
@@ -47,7 +40,7 @@ pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "
 # is.factor(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
 # unique(ESM$Excluded.for.Low.Participation..1...no..2...yes.)
 # 
-# # keeping an overview of what participants were removed - for matching with the CBM df
+# #keeping an overview of what participants were removed - for matching with the CBM df
 # ESM_exluded_low_part <- filter(ESM, Excluded.for.Low.Participation..1...no..2...yes. == "2")
 # ESM_exluded_low_part_ID <- unique(ESM_exluded_low_part$Actual_ID) #The IDs removed are P010, P019, P020, P028, P038, P041, P049, P506, P513
 # 
@@ -71,14 +64,14 @@ pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "
 # 
 # 
 # #Selecting only the relevant columns in the CBM data for better overview
-# CBM_sub <- CBM %>% select(c(1:7), 
-#                           EEfRT_averaged_lowp, 
-#                           EEfRT_averaged_medp, 
+# CBM_sub <- CBM %>% select(c(1:7),
+#                           EEfRT_averaged_lowp,
+#                           EEfRT_averaged_medp,
 #                           EEfRT_averaged_highp,
 #                           EEfRT_LowProb_DiffScore,
 #                           EEfRT_MedProb_DiffScore,
 #                           EEfRT_HighProb_DiffScore,
-#                           POSCBMTrainingaccuracy,	
+#                           POSCBMTrainingaccuracy,
 #                           POSCBMTestingaccuracy,
 #                           NEGCBMTrainingaccuracy,
 #                           NEGCBMTestingaccuracy,
@@ -92,7 +85,7 @@ pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "
 # 
 # # 16 participants have NAs in their EEfRT columns - due to lacking EEfRT scores
 # 
-# #Removing the participants not included in the ESM df first to inspect what IDs are left
+#  #Removing the participants not included in the ESM df first to inspect what IDs are left
 # CBM_sub <- filter(CBM_sub, ID != "P010")
 # CBM_sub <- filter(CBM_sub, ID != "P019")
 # CBM_sub <- filter(CBM_sub, ID != "P020")
@@ -111,11 +104,10 @@ pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "
 # 
 # 
 # #Further inspection shows that the problematic IDs are caused by NAs in the various prob categories of the EEfRT measurements - so incomplete CBM data. Removing all of them
-# CBM_sub <- CBM_sub %>% filter(!ID %in% c("P003", "P024", "P036", "P501", "P509", "P510","P512", "P515", "P525", "P526", "P535", "P536")) #The resulting df 
-# 
+# CBM_sub <- CBM_sub %>% filter(!ID %in% c("P003", "P024", "P036", "P501", "P509", "P510","P512", "P515", "P525", "P526", "P535", "P536")) #The resulting df
 # 
 # #Unique IDs in the subsetted CBM data
-# length(unique(CBM_sub$ID)) #The resulting df now has 58 unique participants. There were 67 in the ESM data. 
+# length(unique(CBM_sub$ID)) #The resulting df now has 58 unique participants. There were 67 in the ESM data.
 # CBM_sub_unique_IDs <- unique(CBM_sub$ID)
 # 
 # #Looking at which IDS in the ESM df do not occur in the CBM df
@@ -125,6 +117,7 @@ pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "
 # 
 # #The IDs that occur in the ESM data but not in the CBM data are:
 # #P024, P036, P501, P509, P512, P525, P526, P535, P536 (9 in total)
+# 
 # #Removing them from the ESM data:
 # ESM <- ESM %>% filter(!Actual_ID %in% c("P003","P024", "P036", "P501", "P509", "P512", "P525", "P526", "P535", "P536"))
 # 
@@ -136,12 +129,9 @@ pacman::p_load("tidyverse", "ggpubr", "Hmisc", "corrplot", "rstatix", "psych", "
 # CBM_sub <- CBM_sub %>% filter(!ID %in% "P022")
 # 
 # length(unique(ESM$Actual_ID))
-# length(unique(CBM_sub$ID)) #The two dfs are now equal 
-# 
-# 
+# length(unique(CBM_sub$ID)) #The two dfs are now equal
 
 
-##### Instead of all of the above, I guess an alternative option was to just merge the dfs, and write na.action "na-omit" in the model .....
 ```
 
 
@@ -176,20 +166,13 @@ Variable types:
 - Predictors: EEfRT averages are ratios. Between 0 and 1
 
 
-I should consider centering the outcome variables (ant/con pleasure - see link: https://philippmasur.de/2018/05/23/how-to-center-in-multilevel-models/)
+# Inspecting the distributions of the data 
 
-Christine writes that the multilevel analysis should contain:
-- checking residuals
-- mean-centring some variables
-- running models (with and without outliers)
-- generating some plots at the end
-
-
-# Inspecting the distributions of the data (once more :PPP)
+## Outcome measures
 ```{r}
 ESM_merged <- read.csv("./data/ESM_CBM_merged")
 
-#Distribution of experienced and anticipated pleasure scores
+#1. Distribution of experienced and anticipated pleasure scores - We observe that the two outcome variables have similar distribution across Likert-options
 hist(ESM_merged$AntPleasure, col = 'coral2')
 hist(ESM_merged$ConPleasure, col = 'steelblue')
 
@@ -209,34 +192,35 @@ Ant_pl
 Con_pl
 
 
+#Relationship between the two outcome variables - Are they correlated? (Colour by ID or Day)
+#Inspection of the plot shows us that the two outcome measures most likely are correlated, with the spread of scores also being equal to each side from the midline. Seems to be relatively even across participants and days
+ggplot(ESM_merged, aes(x=AntPleasure, y=ConPleasure, colour = ID)) + geom_point() + geom_jitter() + ggtitle("Relation between the two outcome variables")
+
+```
+
+## Predictors
+```{r}
 #Distribution of proportions according to reward probability 
 hist(ESM_merged$EEfRT_averaged_lowp, col = 'coral2') # When the probability of reward is low, the general tendency is for people to not make very much effort (low proportions of people chose the hard task)
 hist(ESM_merged$EEfRT_averaged_medp, col = 'green') # When the probability of reward is medium, there is a tendency that 50/50 chooses either the hard or the low task
 hist(ESM_merged$EEfRT_averaged_highp, col = 'blue') #When the probability of reward is high, there is a tendency that most people choose the hard task
 
 
-#Relationship between the two outcome variables - Are they correlated? (Colour by ID or Day)
-ggplot(ESM_merged, aes(x=AntPleasure, y=ConPleasure, colour = ID)) + geom_point() + geom_jitter() #Inspection of the plot shows us that the two outcome measures most likely are correlated, with the spread of scores also being equal to each side from the midline. Seems to be relatively even across participants and days
-
 
 #Are the predictors correlated?
-ggplot(ESM_merged, aes(x=EEfRT_averaged_medp, y=EEfRT_averaged_lowp, colour = ID)) + geom_point()
-ggplot(ESM_merged, aes(x=EEfRT_averaged_medp, y=EEfRT_averaged_highp, colour = ID)) + geom_point() 
-ggplot(ESM_merged, aes(x=EEfRT_averaged_lowp, y=EEfRT_averaged_highp, colour = ID)) + geom_point() 
+# The plot confirms what was found in the correlation analysis - there seems to be some degree of positive correlations between the low and medium probability categhory, and between the medium and high probability categories. High and low do not seem to be correlated. 
 
-ggplot(ESM_merged, aes(EEfRT_averaged_medp, EEfRT_averaged_lowp)) + 
-  geom_point(color='blue') +
-  geom_smooth(method = "lm", colour = 'red')
+ggplot(ESM_merged, aes(x=EEfRT_averaged_medp, y=EEfRT_averaged_lowp, colour = ID)) + geom_point() + geom_smooth(method = "lm", colour = 'red')
+ggplot(ESM_merged, aes(x=EEfRT_averaged_medp, y=EEfRT_averaged_highp, colour = ID)) + geom_point() + geom_smooth(method = "lm", colour = 'red') # Strongest relationship between medium and ghigh
+ggplot(ESM_merged, aes(x=EEfRT_averaged_lowp, y=EEfRT_averaged_highp, colour = ID)) + geom_point() + geom_smooth(method = "lm", colour = 'red')
+
+```
 
 
-ggplot(ESM_merged, aes(EEfRT_averaged_medp, EEfRT_averaged_highp)) + 
-  geom_point(color='blue') +
-  geom_smooth(method = "lm", colour = 'red')
 
-ggplot(ESM_merged, aes(EEfRT_averaged_highp, EEfRT_averaged_lowp)) + 
-  geom_point(color='blue') +
-  geom_smooth(method = "lm", colour = 'red')
+# Individual trajhectories - Distribution of the proportion of hard tasks choses in the three probability categories
 
+```{r}
 # #From long to wide data
 library(tidyr)
 wide <- ESM_merged %>% pivot_longer(cols=c('EEfRT_averaged_lowp', 'EEfRT_averaged_medp', 'EEfRT_averaged_highp'),
@@ -251,14 +235,20 @@ wide$dummy_prob_group[wide$prob_cond == "EEfRT_averaged_lowp"] <- 1
 wide$dummy_prob_group[wide$prob_cond == "EEfRT_averaged_medp"] <- 2
 wide$dummy_prob_group[wide$prob_cond == "EEfRT_averaged_highp"] <- 3
 
-unique(wide$dummy_prob_group)
+# unique(wide$dummy_prob_group) We have the correct dummy variables
 
 
-# Create a line plot with all conditions in one - to see pattern differences
+# Create a line plot with all conditions in one - to see pattern differences. lines represent individual trajectories
 ggplot(wide, aes(x = dummy_prob_group, y = Hard_task_proportion, color = ID)) + geom_line() +
-  scale_x_continuous(breaks = seq(1, 3, by = 1))
+  scale_x_continuous(breaks = seq(1, 3, by = 1)) + xlab("Probability group") + ggtitle("Proportion of hard tasks chosen in the three probability categories") + theme(legend.position="none")
 
 
+```
+We see that the proprotion of hard tasks chosen generally increase as the probability of reward increases
+
+
+# Distributions across Likert options and days
+```{r}
 # Inspect the distribution of anticipated pleasure and experienced pleasure across days for each participant
 ggplot(ESM_merged, aes(x = AntPleasure, color = ID)) + geom_jitter(stat="count") +
   scale_x_continuous(breaks = seq(1, 7, by = 1)) + facet_wrap(~Day) + labs(title = "Anticipated Pleasure",
@@ -269,9 +259,7 @@ ggplot(ESM_merged, aes(x = AntPleasure, color = ID)) + geom_jitter(stat="count")
 ggplot(ESM_merged, aes(x = ConPleasure, color = ID)) + geom_jitter(stat="count") +
   scale_x_continuous(breaks = seq(1, 7, by = 1)) + facet_wrap(~Day) + labs(title = "Experienced Pleasure",
        subtitle = "(Visualised per day of measurement)",
-       y = "Count", x = "Anticipated Pleasure - 7 pt. Likert Scale") + theme_bw() + theme(legend.position="none")
-
-#These plot shows an indication that the response pattern does not vary much between days. The same response pattern is found between the two pleasure measures, with a tendency for all participants to have more responses in the positive end of the Likert-scale. (5-7)
+       y = "Count", x = "Experienced Pleasure - 7 pt. Likert Scale") + theme_bw() + theme(legend.position="none")
 
 
 #Centering and scaling the two outcome variables
@@ -292,7 +280,11 @@ ggplot(ESM_merged, aes(ConPleasure_Z)) + geom_density(aes(x=ConPleasure_Z, y=..d
 ggplot(ESM_merged, aes(ConPleasure_centered)) + geom_density(aes(x=ConPleasure_centered, y=..density.., color = ID), bins=50) + facet_wrap(~ID) + theme(legend.position="none")+ ggtitle("Experienced Pleasure - Population Mean Centered") 
 
 ```
+These plot shows an indication that the response pattern does not vary much between days. The same response pattern is found between the two pleasure measures, with a tendency for all participants to have more responses in the positive end of the Likert-scale. (5-7)
 
+
+
+#Inspection of ranges and centering variables
 
 ```{r}
 #Inspecting range of EEfRT ratios (predictors)
@@ -306,7 +298,7 @@ min(ESM_merged$EEfRT_averaged_highp) #0.03
 max(ESM_merged$EEfRT_averaged_highp) #0.1
 
 
-#Centering??
+#Centering
 # I do not think centering the predictors is necessary - there is a true meaningful 0 (our predictors are ratio variables)
 # #Centering predictors - tetsing the same models but with centered predictors
 # If scale = TRUE, then z-scores are computed
@@ -314,44 +306,17 @@ ESM_merged$EEfRT_averaged_lowp_cen <- scale(ESM_merged$EEfRT_averaged_lowp, cent
 ESM_merged$EEfRT_averaged_medp_cen <- scale(ESM_merged$EEfRT_averaged_medp, center = TRUE, scale = FALSE)
 ESM_merged$EEfRT_averaged_highp_cen <- scale(ESM_merged$EEfRT_averaged_highp, center = TRUE, scale = FALSE)
 
-#Testing cumulative link mixed models (haven't checked assumptions yet)
-
-
-
 ```
 
 #Modelling
 
 # Logistic regression 
-A logistic regression is used to classify/predict a categorical (usually binary) outcome  based on previous observations of a data set. Independent variables are used to predict the occurrence or failure of specific events. Standard Logistic regression’s output lies between 0 and 1.
-
 - Logistic regression seeks to study and examine the probabilities of an event's occurrence.
-- In our case, the outcome variable is not binary, and so a standard logistic regression is not suitable. 
-- Calculates coefficients through maximum likelihood estimation
+- In our case, the outcome variable is not binary, and so a standard logistic regression is not suitable. A cumulative link mixed model is more appropriate. 
 
 
-The fact that I am asked to answer whether the lab measures of reward anticipation can predict the ESM measures of reward anticipation seems kind of strange, when really the power point seems to suggest that the question of interest really regards wether or not the two are associated with each other. 
-
-
-## Cumulative link mixed model (CLMMs)
-- This is a logistic regression model - and the task is becoming a classification task rather than a prediction task. 
-- The CLMM allows for analysing ordinal response variables while taking use of random effects as well
-- These models are also known as ordered regression models, and proportional odds models
-- Estimation is done via maximum likelihood
-- Models are fitted with the Laplace approximation and adaptive Gauss.Hermite quadrature
-- we're working with cumulative probabilities
-- Cumulative probability (or odss, depending on specifications) of falling within or below any of the certain crdered categories in our outcome variable
-
-Goal:
-- Determine the realtionship between an ordered factor dependent variable and a set of predictors
-- Ideal for analysing Likert-scale data
-
- 
 #Regarding scaling variables
 I don't think scaling the predictors would be necessary, considering that all three predictors contain the same  format of information. There is a clear meaning of 0 in our case (for the predictors that is) - 0 is a complete absence of hard tasks for the given probbability
-
-#LaPlace approximation
-Laplace's approximation provides an analytical expression for a posterior probability distribution by fitting a Gaussian distribution with a mean equal to the MAP solution and a variance equal to the observed Fisher information.
 
 ```{r}
 
@@ -375,12 +340,10 @@ conmod1 <- clmm(ConPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_
 
 
 # Comparing against the null
-anova(ant_null, antmod) # the full model does not seem to be much better, no significant difference
-anova(con_null, conmod) # the full model does not seem to be much better, no significant difference
+anova(ant_null, antmod1) # the full model does not seem to be much better, no significant difference
+anova(con_null, conmod1) # the full model does not seem to be much better, no significant difference
 
-#getting the pseudo r squared
-#nagelkerke(fit = antmod1, null = ant_null)
- 
+
 summary(antmod1)
 summary(conmod1)
 
@@ -388,12 +351,6 @@ summary(conmod1)
 confint(antmod1) #Both models include 0 in the confidence intervals
 confint(conmod1)
 
-
-#Questions to ask:
-# How much variance is explained by the random predictors?
-# The primary result is the coefficient table with parameter estimates
-
-#Intuition between interpretation of the clmm() output. Positive coefficients indicate that higher averaged proportions of hard tasks in the given probability category is associated with higher ratings of the outcome measures
 ```
 
 
@@ -402,20 +359,7 @@ confint(conmod1)
 #Result 
 ## There does not seem to be any significant associations between our predictors (ratio of hard tasks chosen in the three probability conditions) and reward/pleasure anticipation, nor between the predictors and experienced rewards/pleasure (at p>.05). 
 
-- Ordinal regression outputs indicate the likelihood/odds/proportional odds (depending on the link function applied) of moving from one category to the next at any level in the ordinal structure of the dependent variable (this is why the assumpyion of parallel lines is so important). From lower to higher. 
-
 - There are pretty large standard errors for all estimates - large uncertainty
-We can exponentiate the model outputs to get odds ratios
-
-
-
-#Trends
-Anticipated pleasure (disregarding bad model fit and insignificance):
-Low p: The positive estimate indicates that, as the proportion of hard tasks chosen for low probability goes up, people are more likely to have higher self reported anticipation of pleasure
-
-Medium and high p: negative association means that as the proportion of hard tasks chosen increases, people are less likely to report higher anticipated pleasure. (Counterintuitive according to our assumptions. We would assume a positive relationship between choosing harder tasks and reporting higher levels of anticipation)
-
-Experienced pleasure (disregarding bad model fit and insignificance):
 
 
 #Model fit:
@@ -425,9 +369,7 @@ Experienced pleasure (disregarding bad model fit and insignificance):
 - Assumptions of parrallel lines violated for both models (the effects of the predictors on the ordinal outcome are not the same for each change point in the dependent variable), expect for EEfRT_lowp on the anticipated pleasure
 
 - There seems to be quite some group level variance for ID in both models. Less for days within subjects. (spread in population distribution)
-- - Standard errors are also quite wide for all fixed predictors in both, but lowest for "lowp" in both models (sample variation from true population mean)
-
-
+- Standard errors are also quite wide for all fixed predictors in both, but lowest for "lowp" in both models (sample variation from true population mean)
 
 
 
@@ -442,26 +384,15 @@ The assumptions should be tested in the following order:
 4. Proportional odds
 
 
-
-Comment on multicollinearity:
-Multicollinearity exists whenever an independent variable is highly correlated with one or more of the other independent variables in a multiple regression equation. Multicollinearity is a problem because it undermines the statistical significance of an independent variable. Other things being equal, the larger the standard error of a regression coefficient, the less likely it is that this coefficient will be statistically significant.
-
-Comment on proportional odds
-- This assumption means that the relationship between each pair of outcome groups has to be the same. 
-- We want to test the assumption that the effect of each intependent variable is the same for each change point in the dependent variable. So the effect of EEfRT_low_p on going from 1 to 2 on the likert scale should be the same as the effect of that variable on going from 2 to 3 etc. 
-- If the relationship between all pairs of groups is the same, then there is only one set of coefficient, which means that there is only one model.
-- If this assumption is violated, different models are needed to describe the relationship between each pair of outcome groups.
-
-
 # 1. The dependent variable is ordered (satisfied)
 This assumption is fulfilled - Likert-scale data is our outcome variable. 
 
-# 2. One or more of the predictors are either continuous, categorical, or ordinal (satosfied)
+# 2. One or more of the predictors are either continuous, categorical, or ordinal (satisfied)
 - We're dealing with ratio scale variables. These are considered continuous within their limitation.
 - maybe double check this with Christine. Otherwise, consider scaling the predictors
 
 
-# 3. No multicollinearity between the independent variables (saitisfied)
+# 3. No multicollinearity between the independent variables (satisfied)
 ```{r}
 # pacman::p_load("GGally")
 
@@ -477,7 +408,7 @@ ggpairs(EEfRT_avs, title = "Correlation Plot between each predictor Variable")
 
 ```
 
-# 4. Proportional Odds (not satisfied ?? )
+# 4. Proportional Odds (not satisfied - unless there is a more correct way to asess this assumption for mixed models)
 Brant test can be used to test this assumption
 
 - The assumption is not violated if the p-values for Brant's test are above .05. 
@@ -503,7 +434,7 @@ ant_polr <- polr(AntPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT
 brant(ant_polr)
 
 
-  con_polr <- polr(ConPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp, data = ESM_merged, na.action = "na.omit", Hess = TRUE)
+con_polr <- polr(ConPleasure ~ EEfRT_averaged_lowp + EEfRT_averaged_medp + EEfRT_averaged_highp, data = ESM_merged, na.action = "na.omit", Hess = TRUE)
 
 brant(con_polr)
 
@@ -517,25 +448,8 @@ brant(con_polr)
 
 
 
-#Interpreting the model output
-https://marissabarlaz.github.io/portfolio/ols/ 
-
-Firstly: Difference between probability and odds
-- Probabilities are considered proportions or percentages, defined by dividing the occurrences of an event divided by the total number of observations. 
-- Odds are the ratio of the probability of one event to the probability of another event, which can be simplified as the ratio of the frequency of X to the frequency of Y.
-
-
-If the odds equal 1, the probabilities of the outcomes are equal. If the odds are lower than 1, the probability of the second event is greater than the first (aka, if m/p < 1, then P is more likely than M). If odds is higher than 1, the probability of the first event is greater than the second event (if m/p > 1, then M more likely than P).
-
-Log odds are logarithmically transformed odds.
-
-An odds ratio is the ratio of two odds. It tells you if the odds for a particular event is more or less likely in a particular scenario over another.
-
-A log odds ratio is the log of the odds ratio. If a log odds ratio is positive, the specified level boosts the chances of a selected outcome. If a log odds ratio is negative, the specified level decreases the chances of a selected outcome. Log odds are centered around 0 (because ln(1) = 0, so when odds are equal, ln(odds) = 0.
-
-In order to convert from log odds ratios to odds ratios, use exp(X). To convert from log odds ratios to probabilities, use the following formula: probability = exp(X)/(1 + exp(X)). You can also use the plogis() function to do this conversion.
-
-
+# Concluding remarks
+No signififcant relationships were found between the three probabiliy categories and the two outcome measures (experienced and anticipated pleasure). However, the assumption of parallel lines is seemingly violated, suggesting that a different model might be more appropriate. 
 
 
 
