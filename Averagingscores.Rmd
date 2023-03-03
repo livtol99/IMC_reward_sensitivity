@@ -25,7 +25,7 @@ df_CBM <- read.csv("./data/CBM_data.csv")
 
 
 #Creating subset for just for better overview
-#EEfRT_sub <- df_CBM %>% select(c((1:7), contains("EEfRT")))
+EEfRT_sub <- df_CBM %>% select(c((1:7), contains("EEfRT")))
 
 length(unique(df_CBM $participant_id)) #81 unique subs
 
@@ -35,13 +35,10 @@ df_CBM  <- subset(df_CBM ,exclude == 0 )
 #Replace weird column values with NA
 df_CBM [df_CBM  == "#NULL!"] <- NA
 
-#Remove NAs before Creating the averaged scores
-
-as_tibble(df_CBM )
+df_CBM <- as_tibble(df_CBM )
 
 
 # Make all EEfRT columns numeric
-# MAKE THIS CODE LESS MANUAL AT SOME POINT
 # Pos high prob
 df_CBM $POS_EEfRT_prop_hard_choice_highprob <- as.numeric(df_CBM $POS_EEfRT_prop_hard_choice_highprob, na.rm = T)
 is.numeric(df_CBM $POS_EEfRT_prop_hard_choice_highprob)
@@ -95,16 +92,19 @@ sub <- df %>% select(c((1:7), EEfRT_averaged_lowp, EEfRT_averaged_medp, EEfRT_av
 # #Removing non-useful columns in order to make the corr matrix work easily
 sub$exclude <- NULL 
 sub$participant_id <- NULL
-# sub$Nationality <- NULL
-# sub$Gender <- NULL
+sub$Nationality <- NULL
+sub$Gender <- NULL
+
+any(is.na(sub)) #contains NAs - need to remove these to compute correlations
+sub[!complete.cases(sub), ]
+
+sub <- na.omit(sub) #no NAs now
 
 #Testing the class of all variables at once
 sapply(sub, class)
 
 #Change all baseline measures to numeric
-sub <- sub %>% mutate_at(c(6:17), as.numeric) #Remember to update the number specified according to the number of columns dropped
-
-# na.omit(sub)  shuld NAs be omitted for the correlation calculation?
+sub <- sub %>% mutate_at(c(4:15), as.numeric) #Remember to update the number specified according to the number of columns dropped
 
 
 # Asummption of normally distributed data for pearson's correlation test
@@ -120,10 +120,10 @@ hist(sub$EEfRT_averaged_medp)
 ```
 
 ```{r}
-#### Correlation Work - IF TIME: create the correlation plot with their corresponding p-values
+#### Correlation Work
 
 #creating a subset for correlation work
-corsub <- sub %>% select(c(, (6:17)))
+corsub <- sub %>% select(c(, (4:15)))
 corsub <- na.omit(corsub)
 sapply(corsub, class)
 corsub_matrix <- as.matrix(corsub)
@@ -131,9 +131,6 @@ corsub_matrix <- as.matrix(corsub)
 
 #create Spearman correlation matrix
 corr_mat <-  cor(corsub, method="spearman")
-
-#Create a p-value matrix for including in the plot
-#cor_matrix <- cor_pmat(sub, method = "spearman")
 
 #Correlation matrix - using nonparametric Spearman correlation test due to non-normal variables, and not a complete set of continuous variables
 #Obtains p-values as well 
@@ -145,10 +142,11 @@ corrplot(corr_mat) #With circles to represent correlations instead
 
 ```
 
+# Concluding remarks on correlation analyis
 Output of the correlation analysis
 - For the high and medium probability categories, no relationship between the averaged EEfRT scores and baseline measures were found (p>.05)
 - For the low probability category, a small positive correlation (0.29) was found between the averaged EEfRT score and the MASQ.AA measure (p<0.05). Otherwise, no significant correlations were found for this probability category and the rest of the measure
-- Regarding the predictor variables - there seems to be a small positive correlation between the low and high probability EEfRT scores (p<0.05)
+- Regarding the predictor variables - there seems to be a small positive correlation between the low and medium probability EEfRT scores (p<0.05), and a mmoderate positive correlation between the medium and the high probability category
 
 
 ```{r}
