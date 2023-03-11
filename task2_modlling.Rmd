@@ -198,6 +198,10 @@ ggplot(ESM_merged, aes(x=AntPleasure, y=ConPleasure, colour = ID)) + geom_point(
 
 ```
 
+We see that the responses for the two outcome variables, anticipated and experienced pleasure, most likely are correlated. There is a linear relationship with similar spread to each side. We also observe that there is a heavier weight of responses in the higher response categories. 
+
+
+
 ## Predictors
 ```{r}
 #Distribution of proportions according to reward probability 
@@ -208,17 +212,24 @@ hist(ESM_merged$EEfRT_averaged_highp, col = 'blue') #When the probability of rew
 
 
 #Are the predictors correlated?
-# The plot confirms what was found in the correlation analysis - there seems to be some degree of positive correlations between the low and medium probability categhory, and between the medium and high probability categories. High and low do not seem to be correlated. 
-
-ggplot(ESM_merged, aes(x=EEfRT_averaged_medp, y=EEfRT_averaged_lowp, colour = ID)) + geom_point() + geom_smooth(method = "lm", colour = 'red')
+ ggplot(ESM_merged, aes(x=EEfRT_averaged_medp, y=EEfRT_averaged_lowp, colour = ID)) + geom_point() + geom_smooth(method = "lm", colour = 'red')
 ggplot(ESM_merged, aes(x=EEfRT_averaged_medp, y=EEfRT_averaged_highp, colour = ID)) + geom_point() + geom_smooth(method = "lm", colour = 'red') # Strongest relationship between medium and ghigh
 ggplot(ESM_merged, aes(x=EEfRT_averaged_lowp, y=EEfRT_averaged_highp, colour = ID)) + geom_point() + geom_smooth(method = "lm", colour = 'red')
 
 ```
 
+## Comments on the plots above 
+1. Proportions according to probability category
+- (Red histogram plot) When the probability of reward is low, the general tendency is for people to not make very much effort. this is reflected in the left skewed plot. 
+- (Green histogram plot) When the probability of reward is medium, there is a tendency that 50/50 chooses either the hard or the low task. This is reflected in the almost bell shaped curve, centered at around .5. 
+- (Blue Histogram Plot): When the probability of reward is high, there is a tendency that most people choose the hard task - as reflected in the right skewed graph
 
 
-# Individual trajhectories - Distribution of the proportion of hard tasks choses in the three probability categories
+2. Correlation of predictors
+The three plots confirms what was found in the correlation analysis - there seems to be some degree of positive correlations between the low and medium probability categhory, and between the medium and high probability categories. High and low do not seem to be correlated. 
+
+
+# Individual trajectories - Distribution of the proportion of hard tasks choses in the three probability categories
 
 ```{r}
 # #From long to wide data
@@ -273,14 +284,27 @@ ESM_merged$AntPleasure_centered <- scale(ESM_merged$AntPleasure, center = T, sca
 
 #Visualising the z-scored and centered outcome variables as distributions per participant
 
+# Uncentered
 ggplot(ESM_merged, aes(ConPleasure)) + geom_density(aes(x=ConPleasure, y=..density.., color = ID), bins=50) + facet_wrap(~ID) + theme(legend.position="none") + ggtitle("Experienced Pleasure - Uncentered") + scale_x_continuous(breaks = seq(1, 7, by = 1))
 
+ggplot(ESM_merged, aes(AntPleasure)) + geom_density(aes(x=AntPleasure, y=..density.., color = ID), bins=50) + facet_wrap(~ID) + theme(legend.position="none") + ggtitle("Anticipated Pleasure - Uncentered") + scale_x_continuous(breaks = seq(1, 7, by = 1))
+
+
+#Z-scored
 ggplot(ESM_merged, aes(ConPleasure_Z)) + geom_density(aes(x=ConPleasure_Z, y=..density.., color = ID), bins=50) + facet_wrap(~ID) + theme(legend.position="none") + ggtitle("Experienced Pleasure - Z-scored") 
 
+ggplot(ESM_merged, aes(AntPleasure_Z)) + geom_density(aes(x=AntPleasure_Z, y=..density.., color = ID), bins=50) + facet_wrap(~ID) + theme(legend.position="none") + ggtitle("Anticipated Pleasure - Z-scored") 
+
+
+#Mean centered
 ggplot(ESM_merged, aes(ConPleasure_centered)) + geom_density(aes(x=ConPleasure_centered, y=..density.., color = ID), bins=50) + facet_wrap(~ID) + theme(legend.position="none")+ ggtitle("Experienced Pleasure - Population Mean Centered") 
 
+ggplot(ESM_merged, aes(AntPleasure_centered)) + geom_density(aes(x=AntPleasure_centered, y=..density.., color = ID), bins=50) + facet_wrap(~ID) + theme(legend.position="none")+ ggtitle("Anticipated Pleasure - Population Mean Centered") 
+
 ```
-These plot shows an indication that the response pattern does not vary much between days. The same response pattern is found between the two pleasure measures, with a tendency for all participants to have more responses in the positive end of the Likert-scale. (5-7)
+The two first plots indicate that the response pattern does not vary much between days. The same response pattern is found between the two pleasure measures, with a tendency for all participants to have more responses in the positive end of the Likert-scale. (5-7)
+
+The next three groups of plots give us more detailed information regarding individual distributions of scores throughout the week of measurements. (NB. The uncentered plot is likely to be more useful, as the scale simply represents the Likert options). Despite different scales on the y-axis for anticipated and ecperienced pleasure (probably due to differences in amounts of responses), there seems to be very similar patterns/curvature of individual distributions for the two mesures. 
 
 
 
@@ -366,12 +390,10 @@ confint(conmod1)
 - There are large standard deviations in the estimates
 - Confidence intervals all include 0 for the coefficients of both models (no sifgnificance)
 - No difference between the null and the full model (random intercept model)
-- Assumptions of parrallel lines violated for both models (the effects of the predictors on the ordinal outcome are not the same for each change point in the dependent variable), expect for EEfRT_lowp on the anticipated pleasure
+- Assumptions of parallel lines violated for both models (the effects of the predictors on the ordinal outcome are not the same for each change point in the dependent variable), expect for EEfRT_lowp on the anticipated pleasure
 
 - There seems to be quite some group level variance for ID in both models. Less for days within subjects. (spread in population distribution)
 - Standard errors are also quite wide for all fixed predictors in both, but lowest for "lowp" in both models (sample variation from true population mean)
-
-
 
 
 # Testing model assumptions following model fit
@@ -442,10 +464,9 @@ brant(con_polr)
 
 # The assumption of proportional odds is not satisfied  according to the brant test for all predictors byt the low probability category (anticipated pleasure)
 
-# For experienced pleasure - none of the predictors satisfies the assumption 
+#For experienced pleasure - none of the predictors satisfies the assumption 
 
 ```
-
 
 
 # Concluding remarks
