@@ -79,16 +79,31 @@ write.csv(df_CBM, "./data/preprocessed.csv", row.names=FALSE)
  df <- read.csv("./data/preprocessed.csv")
 ```
 
-### Correlate with baseline measures 
-- Are there any relationships between the baseline measures and the averaged EEfRT scores?
-- Test strength of association between variables
+
+#Descriptive stats
 
 ```{r}
 # Subset all columns containing EEfRT and the baseline measures - to make the task of correlations easier to overview
 # Baseline measures include all MASQ-, TEPS, and BIS/BAs-columns
 sub <- df %>% select(c((1:7), EEfRT_averaged_lowp, EEfRT_averaged_medp, EEfRT_averaged_highp, TEPS_ANT, TEPS_CON, MASQ_GD, MASQ_AD, MASQ_AA, BAS_Drive, BAS_FS, BAS_RR, BIS))
 
+#Descriptive stats - describing the data sample
+sapply(sub, class)
+sub <- na.omit(sub)
 
+#Number of participants in each gender group
+sub %>% count(Gender, sort = TRUE) #45 women, 18 men
+
+#Number of participants in each nationality group
+sub %>% count(Nationality, sort = TRUE) #There are 24 different nationalities, with most people coming from Britain
+
+```
+
+### Correlate with baseline measures 
+- Are there any relationships between the baseline measures and the averaged EEfRT scores?
+- Test strength of association between variables
+
+```{r}
 # #Removing non-useful columns in order to make the corr matrix work easily
 sub$exclude <- NULL 
 sub$participant_id <- NULL
@@ -116,8 +131,8 @@ shapiro.test(sub$EEfRT_averaged_medp) #p>.05 - normal
 hist(sub$EEfRT_averaged_lowp, col = 'coral2')
 hist(sub$EEfRT_averaged_highp, col = 'steelblue')
 hist(sub$EEfRT_averaged_medp)
-
 ```
+
 
 ```{r}
 #### Correlation Work
@@ -147,24 +162,6 @@ Output of the correlation analysis
 - For the high and medium probability categories, no relationship between the averaged EEfRT scores and baseline measures were found (p>.05)
 - For the low probability category, a small positive correlation (0.29) was found between the averaged EEfRT score and the MASQ.AA measure (p<0.05). Otherwise, no significant correlations were found for this probability category and the rest of the measure
 - Regarding the predictor variables - there seems to be a small positive correlation between the low and medium probability EEfRT scores (p<0.05), and a mmoderate positive correlation between the medium and the high probability category
-
-
-```{r}
-#Descriptive stats - describing the data sample
-sapply(sub, class)
-sub <- na.omit(sub)
-
-#Number of participants in each gender group
-sub %>% count(Gender, sort = TRUE) #45 women, 18 men
-
-#Number of participants in each nationality group
-sub %>% count(Nationality, sort = TRUE) #There are 24 different nationalities, with most people coming from Britain
-
-
-
-```
-
-
 
 
 
