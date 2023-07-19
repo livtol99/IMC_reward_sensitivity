@@ -318,8 +318,8 @@ max(ESM_merged$EEfRT_averaged_lowp) #0.81
 min(ESM_merged$EEfRT_averaged_medp) #0
 max(ESM_merged$EEfRT_averaged_medp) #0.975
 
-min(ESM_merged$EEfRT_averaged_highp) #0.03
-max(ESM_merged$EEfRT_averaged_highp) #0.1
+min(ESM_merged$EEfRT_averaged_highp) #0.04
+max(ESM_merged$EEfRT_averaged_highp) #1.0 
 
 
 #Centering
