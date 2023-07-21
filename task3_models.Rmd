@@ -11,8 +11,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 #Loading packages
-#Loading packages 
-
 pacman::p_load("tidyverse", "ggpubr","dplyr", "lme4", "lmerTest", "nlme", "flexmix")
 ```
 
@@ -48,9 +46,6 @@ ESM_3 <- ESM %>% dplyr::select(c(1:2), PA, NA.)
 
 #Rename Actual_ID in ESM df to ID
 ESM_3 <- ESM_3 %>% rename(ID = Actual_ID)
-
-
-
 
 ```
 
@@ -105,11 +100,32 @@ df_task3 <- df_task3  %>% relocate(Day, .after=ID)
 # A strange value appears for participant P503 on day 2. Set this value to NA - and then omit NAs
 df_task3[df_task3 == "#DIV/0!"] <- NA
 
+
+
+#Code for the correction of an error detected in "task3_dayofweek_corrected.Rmd.". There seems to be an issue witrh how "Day" was originally coded. This became apparent when adding dates from the full data set. Should be corrected before the rest of this markdown is run.
+
+# By inspection, we see that there has been an issue in the coding of the "Day" variable in the original ESM data frame. 
+# P037: day 4 is both coded for 20/06 and 21/06
+# P054: day 2 is coded for both 25/06 and 26/06
+# P504: day 6 is both coded for 29/06 and 30/06
+
+#Fixing the coding of the days
+# Recode specific values for the Day column for IDs P037 and P504
+
+# For ID P037, recode day 4 on 21/06/2019 to 5
+df_task3$Day <- with(df_task3, ifelse(ID == "P037" & Day == 4 & Date == "2019-06-21", 5, Day))
+
+# For ID P504, recode day 2 on 26/06/2019 to 3 and day 6 on 30/06/2019 to 7
+df_task3$Day <- with(df_task3, ifelse(ID == "P504" & Day == 2 & Date == "2019-06-26", 3, Day))
+df_task3$Day <- with(df_task3, ifelse(ID == "P504" & Day == 6 & Date == "2019-06-30", 7, Day))
+
+
 #Creating a merged column of subject and day
 df_task3$subj_day <- paste(df_task3$ID, df_task3$Day)
 
 any(is.na(df_task3)) #contains NAs - keeping them so far
 df_task3[!complete.cases(df_task3), ]
+
 ```
 
 #Create SD scores for positive and negative emotions and replicate per day 
@@ -214,7 +230,7 @@ The requested model of using subjects nested withing days seems to be an issue -
 ```{r}
 #Doesn't work - see notes under "issue" below. this is because there are more random effects combinations than observations of diff scores. The nesting of days must be specified in a different way
 
-# mpos <- lmer(SD_PA ~ RT_Diff_Score + (1|subj_day), data = df3_modelling, REML = T,# Restricted maximum likelihood, small sample size 
+# mpos <- lmer(SD_PA ~ RT_Diff_Score + (1|subj_day), data = df3_modelling, REML = T,# Restricted maximum likelihood, small sample size
 #               na.action = "na.omit")
 
 
@@ -412,10 +428,6 @@ ggplot(SD_week,aes(RT_Diff_Score, SD_NA_week, col = ID)) +
 
 # Suggestion
 - I suggest to move to a Bayesian framework, which would allow for a better incorporation of each individual's emotion lability across time. 
-
-
-
-
 
 
 
